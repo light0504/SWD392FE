@@ -1,60 +1,86 @@
 .form-page-container {
+  /* Component-scoped CSS variables */
+  --primary-color: #ff8243;
+  --primary-gradient: linear-gradient(90deg, #ff8243 60%, #ffb86b 100%);
+  --danger-color: #e74c3c;
+  --light-color: #f8fafc;
+  --dark-color: #2d3748;
+  --text-color: #4b5563;
+  --input-bg: #f7faff;
+  --input-border: #e0e7ff;
+  --box-shadow: 0 8px 32px rgba(60, 72, 88, 0.13);
+
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 4rem 1rem;
-  background-color: var(--light-color);
-  min-height: 80vh;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
 }
 
 .form-box {
-  background: white;
-  padding: 2.5rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  padding: 2.8rem 2.2rem;
+  border-radius: 18px;
+  box-shadow: var(--box-shadow);
   width: 100%;
-  max-width: 550px;
+  max-width: 480px;
+  position: relative;
+  transition: box-shadow 0.3s;
+  animation: fadeIn 0.7s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(30px);}
+  to { opacity: 1; transform: none;}
 }
 
 .form-box h2 {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.7rem;
   color: var(--dark-color);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
 .form-row {
   display: flex;
-  gap: 1.5rem;
+  gap: 1.2rem;
   width: 100%;
 }
 
 .form-row .form-group {
-  flex: 1; /* Chia đều không gian */
+  flex: 1;
 }
 
 .form-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.15rem;
+  text-align: left;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.45rem;
   font-weight: 700;
   color: var(--text-color);
-  font-size: 0.95rem;
+  font-size: 0.97rem;
 }
 
 .form-group input {
   width: 100%;
-  padding: 0.8rem;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  padding: 0.9rem 1rem;
+  border: 1.5px solid var(--input-border);
+  border-radius: 7px;
   font-size: 1rem;
+  background: var(--input-bg);
+  transition: border 0.2s, box-shadow 0.2s;
+  outline: none;
 }
+
 .form-group input:focus {
-    border-color: var(--primary-color);
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 127, 80, 0.2);
+  border: 1.5px solid var(--primary-color);
+  box-shadow: 0 0 0 2px #ffe5d0;
 }
 
 .error-text {
@@ -62,55 +88,82 @@
   font-size: 0.85rem;
   margin-top: 0.25rem;
   display: block;
+  font-weight: 500;
 }
 
 .api-error-message {
-  color: white;
-  background-color: var(--danger-color);
-  padding: 0.8rem;
+  color: #fff;
+  background: linear-gradient(90deg, #e74c3c 60%, #ffb6b6 100%);
+  padding: 0.9rem;
   text-align: center;
-  margin-bottom: 1rem;
-  border-radius: 5px;
+  margin-bottom: 1.1rem;
+  border-radius: 7px;
+  font-weight: 600;
+  font-size: 1rem;
 }
 
 .btn-submit {
   width: 100%;
   padding: 1rem;
   border: none;
-  background: var(--primary-color);
-  color: white;
-  font-size: 1.1rem;
+  background: var(--primary-gradient);
+  color: #fff;
+  font-size: 1.13rem;
   font-weight: 700;
-  border-radius: 5px;
+  border-radius: 7px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  margin-top: 0.2rem;
+  box-shadow: 0 2px 8px rgba(255, 130, 67, 0.08);
+  transition: background 0.2s, transform 0.2s;
 }
 
-.btn-submit:hover {
-  background: #e66a3d;
+.btn-submit:hover:not(:disabled) {
+  background: linear-gradient(90deg, #ff8243 80%, #ffb86b 100%);
+  transform: translateY(-2px) scale(1.03);
 }
 
 .btn-submit:disabled {
-  background-color: #ccc;
+  background: #ccc;
   cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .form-footer-link {
   text-align: center;
-  margin-top: 1.5rem;
+  margin-top: 1.7rem;
+  font-size: 1.01rem;
 }
+
 .form-footer-link a {
+  color: var(--primary-color);
   font-weight: 700;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.form-footer-link a:hover {
+  color: #ff8243;
+  text-decoration: underline;
 }
 
 /* --- RESPONSIVE --- */
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .form-box {
-      padding: 2rem 1.5rem;
+    padding: 2rem 1rem;
+    border-radius: 12px;
+    max-width: 98vw;
   }
-  
   .form-row {
     flex-direction: column;
     gap: 0;
+  }
+  .form-box h2 {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .form-box {
+    padding: 1rem 0.3rem;
   }
 }

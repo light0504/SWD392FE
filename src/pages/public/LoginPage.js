@@ -30,18 +30,15 @@ const LoginPage = () => {
         {successMessage && <div className="success-message">{successMessage}</div>}
         
         {/* FORM ĐĂNG NHẬP THỰC TẾ SẼ Ở ĐÂY */}
-        {/*
-        <form>
+        <form className='login-form'>
             <input type="email" placeholder="Email" />
             <input type="password" placeholder="Mật khẩu" />
-            <button type="submit">Đăng Nhập</button>
+            <button type="submit" onClick={() => handleLoginAsRole('Customer')} className="btn-mock btn-customer">Đăng nhập</button>
         </form>
-        */}
 
         <div className="mock-login">
             <h4>Giả Lập Đăng Nhập</h4>
             <p>Chọn một vai trò để tiếp tục:</p>
-            <button onClick={() => handleLoginAsRole('Customer')} className="btn-mock btn-customer">Đăng nhập (Khách hàng)</button>
             <button onClick={() => handleLoginAsRole('Staff')} className="btn-mock btn-staff">Đăng nhập (Nhân viên)</button>
             <button onClick={() => handleLoginAsRole('Manager')} className="btn-mock btn-manager">Đăng nhập (Quản lý)</button>
         </div>
