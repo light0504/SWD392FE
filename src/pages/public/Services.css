@@ -1,0 +1,35 @@
+.services-container {
+  padding: 6rem 0;
+  background-color: var(--light-color);
+}
+
+.section-subtitle {
+    text-align: center;
+    max-width: 600px;
+    margin: -1.5rem auto 3rem auto; /* Căn giữa và tạo khoảng cách */
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.services-grid {
+  display: grid;
+  /* 
+    Tự động điều chỉnh số cột: 
+    - Trên màn hình lớn, có thể là 3 cột.
+    - Trên màn hình nhỏ hơn, sẽ tự xuống 2 hoặc 1 cột.
+    - minmax(320px, 1fr) đảm bảo cột không bao giờ nhỏ hơn 320px.
+  */
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2.5rem; /* Khoảng cách giữa các thẻ dịch vụ */
+}
+
+.loading-text, .error-text {
+    text-align: center;
+    font-size: 1.2rem;
+    padding: 2rem;
+}
+
+.error-text {
+    color: var(--primary-color);
+    font-weight: 700;
+}

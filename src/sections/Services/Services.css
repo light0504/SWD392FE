@@ -1,0 +1,47 @@
+.services-section {
+  padding: 6rem 0;
+  background-color: var(--light-color);
+}
+
+.section-subtitle {
+    text-align: center;
+    max-width: 600px;
+    margin: -1.5rem auto 3rem auto;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2.5rem;
+}
+
+.status-text {
+    text-align: center;
+    font-size: 1.2rem;
+    padding: 3rem 0;
+    color: var(--text-color);
+}
+.error-text {
+    color: var(--danger-color);
+    font-weight: 700;
+}
+
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .services-section {
+    padding: 4rem 0;
+  }
+  .section-subtitle {
+      font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+    .services-grid {
+      /* Trên màn hình nhỏ nhất, đảm bảo cột chiếm toàn bộ chiều rộng */
+      grid-template-columns: 1fr;
+    }
+}

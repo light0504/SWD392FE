@@ -1,0 +1,9 @@
+.main-content {
+  padding-top: 75px; /* Chiều cao của Header */
+}
+
+@media (max-width: 768px) {
+    .main-content {
+      padding-top: 65px; /* Giảm chiều cao header trên mobile */
+    }
+}
