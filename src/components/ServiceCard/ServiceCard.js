@@ -6,14 +6,17 @@ import './ServiceCard.css';
 // Component nhận toàn bộ object 'service' để có đủ thông tin (id, title, price...)
 // Component nhận props và hiển thị thông tin của một dịch vụ
 const ServiceCard = ({ service }) => {
-  const { icon, title, description, price } = service; // Destructure object
+  const { name, description, price, duration } = service; // Destructure object
   const { addToCart } = useCart(); // <-- LẤY HÀM addToCart từ context
 
   return (
     <div className="service-card">
-      <div className="service-icon">{icon}</div>
-      <h3 className="service-title">{title}</h3>
+      {/* <div className="service-icon">{icon}</div> */}
+      <h3 className="service-title">{name}</h3>
       <p className="service-description">{description}</p>
+      <p className="service-duration">
+        Thời gian: {duration} phút
+      </p>
       <div className="service-footer"> {/* Bọc giá và nút vào footer */}
         {price && (
           <p className="service-price">
