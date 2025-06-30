@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import ServiceCard from '../../components/ServiceCard/ServiceCard';
 import './Services.css';
-import { getService } from '../../api_context/api';
+import { getAllService } from '../../api_context/api';
 
 const Services = () => {
   const [services, setServices] = useState([]);
@@ -10,11 +10,11 @@ const Services = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchServices = async () => {
+    const fetchAllServices = async () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await getService('Service'); // Lấy danh sách dịch vụ từ API
+        const data = await getAllService('Service'); // Lấy danh sách dịch vụ từ API
         setServices(data.data); // Cập nhật state với dữ liệu dịch vụ
         console.log('Dữ liệu dịch vụ:', data.data); // In ra dữ liệu để kiểm tra
       } catch (err) {
@@ -24,7 +24,7 @@ const Services = () => {
       }
     };
 
-    fetchServices();
+    fetchAllServices();
   }, []);
 
   const renderContent = () => {
@@ -36,8 +36,8 @@ const Services = () => {
     }
     if (services.length === 0) {
         return <p className="status-text">Hiện chưa có dịch vụ nào.</p>;
-        
     }
+    
     return (
       <div className="services-grid">
         {/* --- ĐÂY LÀ PHẦN SỬA LỖI CHÍNH --- */}
@@ -47,6 +47,7 @@ const Services = () => {
             key={service.id}
             service={service} // <- SỬA Ở ĐÂY
           />
+
         ))}
       </div>
     );
