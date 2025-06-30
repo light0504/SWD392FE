@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import ServiceCard from '../../components/ServiceCard/ServiceCard';
 import './Services.css';
+import { getService } from '../../api_context/api';
 
 const Services = () => {
   const [services, setServices] = useState([]);
@@ -13,25 +14,9 @@ const Services = () => {
       setLoading(true);
       setError(null);
       try {
-        // Mock data với key 'title' để đồng bộ với ServiceCard
-        const mockApiResult = {
-          isSuccess: true,
-          data: [
-            { id: 'uuid-1', title: 'Tắm & Sấy Thơm Tho', description: 'Sử dụng sữa tắm thảo dược, massage thư giãn, an toàn cho da.', price: 250000, icon: '🛁' },
-            { id: 'uuid-2', title: 'Cắt Tỉa Lông & Tạo Kiểu', description: 'Tạo kiểu chuyên nghiệp, gọn gàng và đáng yêu theo yêu cầu.', price: 400000, icon: '✂️' },
-            { id: 'uuid-3', title: 'Combo Chăm Sóc Toàn Diện', description: 'Trọn gói tắm, cắt tỉa, vệ sinh tai, cắt móng. Tiết kiệm hơn!', price: 600000, icon: '💖' },
-          ],
-          message: "Lấy danh sách dịch vụ thành công",
-        };
-        
-        await new Promise(resolve => setTimeout(resolve, 1000)); 
-
-        if (mockApiResult.isSuccess) {
-          setServices(mockApiResult.data);
-        } else {
-          throw new Error(mockApiResult.message || 'Lỗi không xác định.');
-        }
-
+        const data = await getService('Service'); // Lấy danh sách dịch vụ từ API
+        setServices(data.data); // Cập nhật state với dữ liệu dịch vụ
+        console.log('Dữ liệu dịch vụ:', data.data); // In ra dữ liệu để kiểm tra
       } catch (err) {
         setError(err.message);
       } finally {
@@ -51,6 +36,7 @@ const Services = () => {
     }
     if (services.length === 0) {
         return <p className="status-text">Hiện chưa có dịch vụ nào.</p>;
+        
     }
     return (
       <div className="services-grid">

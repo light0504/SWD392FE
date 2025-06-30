@@ -17,7 +17,7 @@ const AppRouter = () => {
     <Routes>
       <Route element={<PublicLayout />}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/dich-vu" element={<ServicesPage />} />
+        {/* <Route path="/dich-vu" element={<ServicesPage />} /> */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/services" element={<ServicesPage />} />
