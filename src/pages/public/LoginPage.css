@@ -1,3 +1,5 @@
+/* LoginPage.css */
+
 .login-container {
   display: flex;
   justify-content: center;
@@ -5,6 +7,7 @@
   padding: 4rem 1rem;
   min-height: 100vh;
   background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  box-sizing: border-box;
 }
 
 .login-box {
@@ -47,6 +50,17 @@
   font-weight: 600;
 }
 
+/* === BỔ SUNG: STYLE CHO THÔNG BÁO LỖI === */
+.error-message {
+  padding: 0.8rem;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+  font-weight: 500;
+  text-align: center;
+}
+
 .login-form {
   display: flex;
   flex-direction: column;
@@ -80,12 +94,18 @@
   cursor: pointer;
   margin-top: 0.2rem;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.08);
-  transition: background 0.2s, transform 0.2s;
+  transition: background 0.2s, transform 0.2s, opacity 0.2s;
 }
 
-.login-form button[type="submit"]:hover {
+.login-form button[type="submit"]:hover:not(:disabled) {
   background: linear-gradient(90deg, #4f46e5 60%, #2563eb 100%);
-  transform: translateY(-2px) scale(1.03);
+  transform: translateY(-2px);
+}
+
+.login-form button[type="submit"]:disabled {
+  background: linear-gradient(90deg, #a5b4fc 60%, #93c5fd 100%);
+  cursor: not-allowed;
+  opacity: 0.8;
 }
 
 .mock-login {
@@ -123,7 +143,7 @@
 
 .btn-mock:hover {
   opacity: 0.92;
-  transform: translateY(-2px) scale(1.03);
+  transform: translateY(-2px);
 }
 
 .btn-customer { background: linear-gradient(90deg, #fbbf24 60%, #f59e42 100%); }
@@ -150,11 +170,11 @@
 /* --- RESPONSIVE --- */
 @media (max-width: 600px) {
   .login-box {
-    padding: 2rem 1rem;
+    padding: 2rem 1.5rem;
     border-radius: 12px;
   }
 
   .login-box h2 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
   }
 }
