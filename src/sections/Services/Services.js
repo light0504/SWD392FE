@@ -1,8 +1,7 @@
-// src/sections/Services/Services.js (ĐÃ SỬA LỖI)
 import React, { useState, useEffect } from 'react';
 import ServiceCard from '../../components/ServiceCard/ServiceCard';
 import './Services.css';
-import { getAllService } from '../../api_context/api';
+import { getAllServices } from '../../api/serviceapi'; // Import the getAllServices function
 
 const Services = () => {
   const [services, setServices] = useState([]);
@@ -14,9 +13,8 @@ const Services = () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await getAllService('Service'); // Lấy danh sách dịch vụ từ API
+        const data = await getAllServices(); // Lấy danh sách dịch vụ từ API
         setServices(data.data); // Cập nhật state với dữ liệu dịch vụ
-        console.log('Dữ liệu dịch vụ:', data.data); // In ra dữ liệu để kiểm tra
       } catch (err) {
         setError(err.message);
       } finally {
@@ -40,12 +38,10 @@ const Services = () => {
     
     return (
       <div className="services-grid">
-        {/* --- ĐÂY LÀ PHẦN SỬA LỖI CHÍNH --- */}
         {services.map(service => (
-          // Thay vì truyền từng props, chúng ta truyền cả object `service`
           <ServiceCard
             key={service.id}
-            service={service} // <- SỬA Ở ĐÂY
+            service={service} // Truyền toàn bộ đối tượng dịch vụ vào component ServiceCard
           />
 
         ))}

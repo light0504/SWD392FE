@@ -1,0 +1,235 @@
+/*
+  File: ServiceManagement.css
+  Mô tả: Kế thừa và mở rộng từ file CSS chung của Dashboard
+         để định dạng cho trang Quản lý Dịch vụ.
+*/
+
+/* --- BIẾN MÀU (VARIABLES) ĐỂ THỐNG NHẤT VỚI DASHBOARD --- */
+:root {
+  --primary-color: #3498db;
+  --dark-color: #2c3e50;
+  --text-color: #555;
+  --light-bg-color: #f8f9fa;
+  --border-color: #e9ecef;
+}
+
+/* --- STYLE CHUNG KẾ THỪA TỪ DASHBOARD --- */
+.dashboard-page {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-title {
+  font-size: 2.2rem;
+  color: var(--dark-color);
+  margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-color);
+  margin-bottom: 2rem;
+}
+
+.content-box, .placeholder-content {
+  background-color: white;
+  padding: 1.5rem 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+}
+
+.placeholder-content.error-box {
+    border: 1px solid #e74c3c;
+    color: #e74c3c;
+}
+
+/* --- STYLE DÀNH RIÊNG CHO TRANG QUẢN LÝ DỊCH VỤ --- */
+
+.content-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.btn-add {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.7rem 1.2rem;
+  border-radius: 5px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-add:hover {
+  background-color: #2980b9; /* Tối hơn màu primary */
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table th, table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+table th {
+  background-color: var(--light-bg-color);
+  color: #6c757d;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+table tbody tr:hover {
+  background-color: #f1f3f5;
+}
+
+.service-name {
+  font-weight: 600;
+  color: var(--dark-color);
+}
+
+.price {
+  font-weight: 600;
+  color: #28a745;
+}
+
+.action-btn {
+  padding: 6px 12px;
+  margin-right: 5px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.action-btn:last-child {
+  margin-right: 0;
+}
+.action-btn:hover {
+  opacity: 0.85;
+}
+
+.btn-edit { background-color: #f39c12; }
+.btn-delete { background-color: #e74c3c; }
+
+/* --- STYLES CHO MODAL --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 15px;
+}
+
+.modal-content {
+  background: white;
+  padding: 25px 30px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.3s;
+}
+
+.modal-content h2 {
+  font-size: 1.5rem;
+  color: var(--dark-color);
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.form-group { margin-bottom: 1rem; }
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+.form-group input, .form-group textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+.form-group input:focus, .form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.25);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  gap: 10px;
+}
+.modal-actions button {
+  padding: 0.7rem 1.5rem;
+  border-radius: 5px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-cancel { background-color: #6c757d; color: white; }
+.btn-save { background-color: var(--primary-color); color: white; }
+
+/* --- RESPONSIVE CHO BẢNG --- */
+@media screen and (max-width: 768px) {
+  .page-title { font-size: 1.8rem; }
+  .page-subtitle { font-size: 1rem; }
+  .content-box { padding: 1rem; }
+  
+  table thead { display: none; }
+  table, tbody, tr, td { display: block; width: 100%; }
+  
+  tr {
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  
+  td {
+    padding: 10px 10px 10px 45%;
+    position: relative;
+    text-align: right;
+    border: none;
+    border-bottom: 1px dotted #ccc;
+  }
+  td:last-child { border-bottom: none; }
+  
+  td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 10px;
+    width: 40%;
+    font-weight: 600;
+    text-align: left;
+    color: var(--dark-color);
+  }
+}

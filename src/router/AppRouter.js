@@ -10,6 +10,7 @@ import DashboardHomePage from '../pages/dashboard/DashboardHomePage';
 import SchedulePage from '../pages/dashboard/SchedulePage';
 import RevenueReportPage from '../pages/dashboard/RevenueReportPage';
 import AccessDeniedPage from '../pages/dashboard/AccessDeniedPage';
+import ServicesManagement from '../pages/dashboard/ServiceManagement';
 import ProtectedRoute from './ProtectedRoute';
 
 const AppRouter = () => {
@@ -26,18 +27,19 @@ const AppRouter = () => {
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute allowedRoles={['Staff', 'Manager']}>
+          <ProtectedRoute allowedRoles={['STAFF', 'MANAGER']}>
             <DashboardLayout />
           </ProtectedRoute>
         }
       >
         <Route index element={<DashboardHomePage />} />
         <Route path="my-schedule" element={<SchedulePage />} />
+        <Route path='services' element={<ServicesManagement/>} />
         <Route path="access-denied" element={<AccessDeniedPage />} />
         <Route 
             path="revenue" 
             element={
-                <ProtectedRoute allowedRoles={['Manager']}>
+                <ProtectedRoute allowedRoles={['MANAGER']}>
                     <RevenueReportPage />
                 </ProtectedRoute>
             } 

@@ -1,10 +1,12 @@
-import React from 'react';
-import { useAuth } from '../../hooks/useAuth';
+import React, { useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import './DashboardPages.css'; // Tái sử dụng CSS chung
 
 const SchedulePage = () => {
     const { user } = useAuth();
-
+    useEffect(() => {
+        console.log('Current user:', user);
+    })
     return (
         <div className="dashboard-page">
             <h1 className="page-title">Quản Lý Lịch Làm Việc</h1>

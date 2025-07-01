@@ -1,24 +1,67 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import './LoginPage.css'; // Sẽ tạo file CSS sau
+import { useAuth } from '../../context/AuthContext';
+import { loginUser } from '../../api/authAPI'; 
+import './LoginPage.css'; // Sử dụng file CSS mới
 
 const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Hiển thị thông báo nếu được chuyển hướng từ trang đăng ký
+  // State cho form đăng nhập thật
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Lấy thông báo và đường dẫn từ trang trước
   const successMessage = location.state?.message;
+  const from = location.state?.from?.pathname || null;
 
-  // Lấy đường dẫn mà người dùng muốn truy cập trước khi bị chuyển đến login
-  const from = location.state?.from?.pathname || '/dashboard';
+  const getRedirectPath = (roles) => {
+    if (roles.includes('Manager') || roles.includes('Staff') || roles.includes('MANAGER') || roles.includes('STAFF')) {
+      return '/dashboard';
+    }
+    return '/'; // Mặc định cho USER
+  };
+  
+  // Xử lý đăng nhập thật qua API
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
 
+    try {
+      const responseData = await loginUser({ email, password });
+      if (responseData.isSuccess) {
+        login(responseData.data);
+        const redirectPath = from || getRedirectPath(responseData.data.roles);
+        navigate(redirectPath, { replace: true });
+      } else {
+        setError(responseData.message || 'Thông tin đăng nhập không chính xác.');
+      }
+    } catch (err) {
+      setError(err.message || 'Không thể kết nối đến máy chủ.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Xử lý đăng nhập giả lập (đã được mang trở lại)
   const handleLoginAsRole = (role) => {
-    // Trong thực tế, đây là nơi bạn sẽ gọi API đăng nhập với email/password
-    // và nhận về thông tin user bao gồm role.
-    login(role); // Giả lập login với role được chọn
-    navigate(from, { replace: true });
+    // Tạo một đối tượng user giả lập để context có thể hoạt động
+    const mockUser = {
+      firstName: role,
+      lastName: "User",
+      email: `${role.toLowerCase()}@petparadise.com`,
+      roles: [role.toUpperCase()]
+    };
+  
+    login(mockUser);
+    const redirectPath = getRedirectPath([role.toUpperCase()]);
+    console.log(`Đăng nhập giả lập với vai trò: ${role}`);
+    navigate(from || redirectPath, { replace: true });
   };
 
   return (
@@ -29,18 +72,35 @@ const LoginPage = () => {
         
         {successMessage && <div className="success-message">{successMessage}</div>}
         
-        {/* FORM ĐĂNG NHẬP THỰC TẾ SẼ Ở ĐÂY */}
-        <form className='login-form'>
-            <input type="email" placeholder="Email" />
-            <input type="password" placeholder="Mật khẩu" />
-            <button type="submit" onClick={() => handleLoginAsRole('Customer')} className="btn-mock btn-customer">Đăng nhập</button>
+        <form className='login-form' onSubmit={handleSubmit}>
+            <input 
+                type="email" 
+                placeholder="Email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required 
+            />
+            <input 
+                type="password" 
+                placeholder="Mật khẩu" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+            />
+            
+            {error && <div className="error-message">{error}</div>}
+
+            <button type="submit" disabled={isLoading}>
+              {isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
+            </button>
         </form>
 
         <div className="mock-login">
-            <h4>Giả Lập Đăng Nhập</h4>
-            <p>Chọn một vai trò để tiếp tục:</p>
-            <button onClick={() => handleLoginAsRole('Staff')} className="btn-mock btn-staff">Đăng nhập (Nhân viên)</button>
-            <button onClick={() => handleLoginAsRole('Manager')} className="btn-mock btn-manager">Đăng nhập (Quản lý)</button>
+            <h4>Hoặc Đăng Nhập Nhanh</h4>
+            <p>Chọn một vai trò để thử nghiệm:</p>
+            <button onClick={() => handleLoginAsRole('Customer')} className="btn-mock btn-customer">Khách hàng (USER)</button>
+            <button onClick={() => handleLoginAsRole('Staff')} className="btn-mock btn-staff">Nhân viên (Staff)</button>
+            <button onClick={() => handleLoginAsRole('MANAGER')} className="btn-mock btn-manager">Quản lý (Manager)</button>
         </div>
 
         <p className="register-link">
