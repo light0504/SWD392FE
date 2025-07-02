@@ -83,6 +83,24 @@
   box-shadow: 0 0 0 2px #ffe5d0;
 }
 
+.form-group select {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: 1.5px solid var(--input-border);
+  border-radius: 7px;
+  font-size: 1rem;
+  background: var(--input-bg);
+  color: var(--text-color);
+  transition: border 0.2s, box-shadow 0.2s;
+  outline: none;
+  appearance: none;
+}
+
+.form-group select:focus {
+  border: 1.5px solid var(--primary-color);
+  box-shadow: 0 0 0 2px #ffe5d0;
+}
+
 .error-text {
   color: var(--danger-color);
   font-size: 0.85rem;
