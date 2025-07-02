@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import './DashboardPages.css'; // Tái sử dụng CSS chung
 
 const SchedulePage = () => {

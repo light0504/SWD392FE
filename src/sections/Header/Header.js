@@ -1,7 +1,7 @@
 // src/sections/Header/Header.js
 import React from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext'; // <-- IMPORT hook xác thực
+import { useAuth } from '../../hooks/useAuth'; // <-- IMPORT hook xác thực
 import useCart from '../../hooks/useCart';       // <-- IMPORT hook giỏ hàng
 import './Header.css';
 

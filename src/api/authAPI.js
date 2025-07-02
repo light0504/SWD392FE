@@ -1,23 +1,22 @@
 import apiClient from './api'; // Sử dụng instance đã cấu hình
 
-/**
- * Gửi thông tin đăng nhập (email, password) để xác thực người dùng.
- * @param {object} credentials - Đối tượng chứa { email, password }.
- * @returns {Promise<object>}
- */
-const loginUser = async (credentials) => {
+const loginUser = async (email, password) => {
   try {
-    const response = await apiClient.post('/Auth/login', credentials);
+    const response = await apiClient.post(
+      '/Auth/login',
+      { email, password },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
     return response.data;
   } catch (error) {
     console.error("Error during login:", error);
-    // Thay vì throw, chúng ta có thể trả về lỗi để component xử lý
     if (error.response && error.response.data) {
-        return error.response.data;
+      return error.response.data;
     }
-    throw error; // Ném lỗi mạng hoặc lỗi không xác định
+    throw error;
   }
 };
+
 
 /**
  * Gửi thông tin để đăng ký tài khoản mới.
