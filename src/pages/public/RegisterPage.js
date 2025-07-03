@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { registerUser } from '../../api/authAPI';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-  
+
   // State cho dữ liệu form
   const [formData, setFormData] = useState({
     firstName: '',
@@ -12,7 +13,9 @@ const RegisterPage = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    address: ''
+    address: '',
+    gender: '1', // default male
+    phoneNumber: ''
   });
 
   // State riêng cho các lỗi validation
@@ -27,7 +30,6 @@ const RegisterPage = () => {
       ...prevData,
       [name]: value
     }));
-    // Xóa lỗi của trường đang nhập để người dùng thấy phản hồi ngay
     if (errors[name]) {
       setErrors(prevErrors => ({ ...prevErrors, [name]: null }));
     }
@@ -51,14 +53,18 @@ const RegisterPage = () => {
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp.';
     }
-
+    if (!formData.phoneNumber) {
+      newErrors.phoneNumber = 'Số điện thoại không được để trống.';
+    } else if (!/^\d{9,15}$/.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = 'Số điện thoại không hợp lệ.';
+    }
     return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError(null);
-    
+
     // Bước 1: Validate form trước khi gửi
     const formErrors = validateForm();
     if (Object.keys(formErrors).length > 0) {
@@ -71,20 +77,25 @@ const RegisterPage = () => {
     setErrors({});
 
     try {
-      // Dữ liệu sẽ được gửi đi, loại bỏ confirmPassword
-      const dataToSend = { ...formData };
-      delete dataToSend.confirmPassword;
+      // Chuẩn bị dữ liệu đúng định dạng API yêu cầu
+      const dataToSend = {
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        gender: parseInt(formData.gender, 10),
+        address: formData.address,
+        imgURL: '',
+        phoneNumber: formData.phoneNumber
+      };
 
-      // --- Giả lập gọi API đăng ký ---
-      console.log('Dữ liệu gửi lên server:', dataToSend);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const mockApiResult = { isSuccess: true, message: 'Đăng ký tài khoản thành công!' };
-      // const mockApiResult = { isSuccess: false, message: 'Email đã tồn tại trong hệ thống.' };
-
-      if (mockApiResult.isSuccess) {
-        navigate('/login', { state: { message: mockApiResult.message } });
+      // Gọi API thực tế
+      const apiResult = await registerUser(dataToSend);
+      if (apiResult.isSuccess) {
+        navigate('/login', { state: { message: apiResult.message || 'Đăng ký tài khoản thành công!' } });
       } else {
-        throw new Error(mockApiResult.message);
+        // Nếu API trả về lỗi (ví dụ: email đã tồn tại)
+        setApiError(apiResult.message || 'Đăng ký thất bại. Vui lòng thử lại.');
       }
     } catch (err) {
       setApiError(err.message || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
@@ -97,7 +108,7 @@ const RegisterPage = () => {
     <div className="form-page-container">
       <form className="form-box" onSubmit={handleSubmit} noValidate>
         <h2>Tạo tài khoản PetParadise</h2>
-        
+
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="lastName">Họ</label>
@@ -128,14 +139,29 @@ const RegisterPage = () => {
           <input type="password" id="confirmPassword" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} required />
           {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="address">Địa chỉ (Không bắt buộc)</label>
           <input type="text" id="address" name="address" value={formData.address} onChange={handleChange} />
         </div>
 
+        <div className="form-group">
+          <label htmlFor="gender">Giới tính</label>
+          <select id="gender" name="gender" value={formData.gender} onChange={handleChange} required>
+            <option value="1">Nam</option>
+            <option value="2">Nữ</option>
+            <option value="0">Khác</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="phoneNumber">Số điện thoại</label>
+          <input type="text" id="phoneNumber" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} required />
+          {errors.phoneNumber && <span className="error-text">{errors.phoneNumber}</span>}
+        </div>
+
         {apiError && <p className="api-error-message">{apiError}</p>}
-        
+
         <button type="submit" className="btn-submit" disabled={loading}>
           {loading ? 'Đang xử lý...' : 'Tạo Tài Khoản'}
         </button>

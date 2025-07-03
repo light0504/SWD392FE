@@ -25,7 +25,7 @@ const loginUser = async (email, password) => {
  */
 const registerUser = async (userData) => {
     try {
-        const response = await apiClient.post('/Auth/register', userData);
+        const response = await apiClient.post('/Customers', userData);
         return response.data;
     } catch (error) {
         console.error("Error during registration:", error);
