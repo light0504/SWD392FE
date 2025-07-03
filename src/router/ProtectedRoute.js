@@ -10,10 +10,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Debug logs
-  console.log('User roles:', user.roles);
-  console.log('Allowed roles:', allowedRoles);
-  console.log('User has permission:', user.roles?.some(role => allowedRoles.includes(role)));
   const hasPermission =
     allowedRoles && user.roles?.some(role => allowedRoles.includes(role));
 
