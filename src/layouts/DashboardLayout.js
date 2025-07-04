@@ -5,6 +5,8 @@ import './DashboardLayout.css';
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
+  const isManager = user && (user.roles.includes('MANAGER') || user.roles.includes('ADMIN'));
+  const isStaff = user && user.roles.includes('STAFF');
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -15,14 +17,24 @@ const Sidebar = () => {
   return (
     <div className="sidebar">
       <div className="sidebar-profile">
-        <h3>Chào, {user.name}!</h3>
-        <p>({user.role})</p>
+        <h3>Chào, {user.firstName}!</h3>
+        <p>({user.roles})</p>
       </div>
       <nav>
-        <NavLink to="/dashboard" end>Trang chủ</NavLink>
-        {(user.role === 'Staff' || user.role === 'Manager') && (<NavLink to="/dashboard/my-schedule">Lịch làm việc</NavLink>)}
-        {user.role === 'Manager' && (<NavLink to="/dashboard/revenue">Xem Doanh Thu</NavLink>)}
-      </nav>
+            <NavLink to="/dashboard" end>Trang Chủ</NavLink>
+            
+            {/* SỬA ĐƯỜNG DẪN Ở ĐÂY */}
+            {isStaff && <NavLink to="/dashboard/schedule">Lịch Của Tôi</NavLink>}
+
+            {isManager && (
+                <>
+                    <NavLink to="/dashboard/schedule-management">Quản Lý Lịch</NavLink>
+                    <NavLink to="/dashboard/revenue">Báo Cáo Doanh Thu</NavLink>
+                    <NavLink to="/dashboard/services">Quản Lý Dịch Vụ</NavLink>
+                    <NavLink to="/dashboard/staff-management">Quản Nhân Viên</NavLink>
+                </>
+            )}
+        </nav>
       <button onClick={handleLogout} className="btn-logout">Đăng xuất</button>
     </div>
   );

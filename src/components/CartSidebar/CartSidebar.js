@@ -35,7 +35,7 @@ const CartSidebar = () => {
               {cartItems.map(item => (
                 <li key={item.id} className="cart-item">
                   <div className="item-info">
-                    <span className="item-title">{item.title}</span>
+                    <span className="item-title">{item.name}</span>
                     <span className="item-price">{item.price.toLocaleString('vi-VN')} VNĐ</span>
                   </div>
                   <button onClick={() => removeFromCart(item.id)} className="item-remove-btn">Xóa</button>

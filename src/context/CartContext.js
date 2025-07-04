@@ -23,8 +23,6 @@ export const CartProvider = ({ children }) => {
       // Nếu chưa có, thêm vào mảng cartItems
       setCartItems([...cartItems, { ...serviceToAdd, quantity: 1 }]);
     }
-     // Tự động mở giỏ hàng sau khi thêm
-    openCart();
   };
 
   // Hàm xóa dịch vụ khỏi giỏ hàng
