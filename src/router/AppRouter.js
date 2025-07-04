@@ -32,6 +32,10 @@ const AppRouter = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/services" element={<ServicesPage />} />
+
+
+         {/* ======================= NOT FOUND ======================= */}
+        <Route path="*" element={<div style={{padding: '5rem', textAlign: 'center'}}><h1>404 - Không tìm thấy trang</h1></div>} />
       </Route>
 
       {/* ======================= PROTECTED ROUTES (DASHBOARD) ======================= */}
@@ -88,8 +92,8 @@ const AppRouter = () => {
         />
       </Route>
       
-      {/* ======================= NOT FOUND ======================= */}
-      <Route path="*" element={<div style={{padding: '5rem', textAlign: 'center'}}><h1>404 - Không tìm thấy trang</h1></div>} />
+     
+      
     </Routes>
   );
 };
