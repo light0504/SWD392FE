@@ -18,6 +18,7 @@ import ManagerSchedulePage from '../pages/dashboard/ManagerSchedulePage';   // <
 import RevenueReportPage from '../pages/dashboard/RevenueReportPage';
 import ServiceManagementPage from '../pages/dashboard/ServiceManagement';
 import AccessDeniedPage from '../pages/dashboard/AccessDeniedPage';
+import StaffManagement from '../pages/dashboard/StaffManagement';
 
 // Auth Components
 import ProtectedRoute from './ProtectedRoute';
@@ -64,6 +65,15 @@ const AppRouter = () => {
           element={
             <ProtectedRoute allowedRoles={['MANAGER']}>
               <ManagerSchedulePage />
+            </ProtectedRoute>
+          } 
+        />
+
+        <Route 
+          path="staff-management" 
+          element={
+            <ProtectedRoute allowedRoles={['MANAGER']}>
+              <StaffManagement />
             </ProtectedRoute>
           } 
         />

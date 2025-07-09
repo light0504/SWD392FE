@@ -3,34 +3,18 @@ import { loginUser} from '../api/authAPI'; // Giả sử bạn đã tạo file a
 
 export const AuthContext = createContext(null);
 
-// export const AuthProvider = ({ children }) => {
-//   const [user, setUser] = useState(null);
-//   const login = (userData) => { setUser(userData); };
-
-//   const logout = () => { setUser(null); };
-//   const value = { user, login, logout, isAuthenticated: !!user };
-
-//   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-// };
-
-// // ✅ Bổ sung đoạn này
-// export const useAuth = () => {
-//   const context = useContext(AuthContext);
-//   if (context === null) {
-//     throw new Error('useAuth must be used within an AuthProvider');
-//   }
-//   return context;
-// };
-
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const storedUser = sessionStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
 
   const login = async (email, password) => {
     try {
       const response = await loginUser(email, password);
       if (response.isSuccess && response.data) {
         setUser(response.data);
-        sessionStorage.setItem('user', response.data)
+        sessionStorage.setItem('user', JSON.stringify(response.data));
         localStorage.setItem('accessToken', response.data.accessToken);
         localStorage.setItem('refreshToken', response.data.refreshToken);
 
@@ -45,6 +29,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setUser(null);
+    sessionStorage.removeItem('user');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
   };

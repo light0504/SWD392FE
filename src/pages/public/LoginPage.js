@@ -37,7 +37,7 @@ const LoginPage = () => {
       const response = await login(email, password);
       // console.log(response);
       if (response.success) {
-        console.log('user: ', sessionStorage.getItem('user'));
+        // console.log('user: ', sessionStorage.getItem('user'));
         const roles = response.data.roles;
         login(response.data); // save to auth context
 

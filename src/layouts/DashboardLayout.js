@@ -31,6 +31,7 @@ const Sidebar = () => {
                     <NavLink to="/dashboard/schedule-management">Quản Lý Lịch</NavLink>
                     <NavLink to="/dashboard/revenue">Báo Cáo Doanh Thu</NavLink>
                     <NavLink to="/dashboard/services">Quản Lý Dịch Vụ</NavLink>
+                    <NavLink to="/dashboard/staff-management">Quản Nhân Viên</NavLink>
                 </>
             )}
         </nav>
