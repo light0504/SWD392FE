@@ -10,7 +10,6 @@ export const MEMBERSHIP_TYPE = {
   GOLD: 2,
   PLATINUM: 3,
 };
-
 export const ORDER_STATUS = {
   PENDING: 0,    // Đang chờ
   PROCESSING: 1, // Đang xử lý
