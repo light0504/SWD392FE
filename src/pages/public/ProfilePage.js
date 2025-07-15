@@ -9,7 +9,6 @@ export default function ProfilePage() {
     name: '',
     email: '',
     phone: '',
-    password: '',
   });
   
   const [editing, setEditing] = useState(false);
@@ -22,10 +21,14 @@ export default function ProfilePage() {
       setProfile({
         name: user.firstName || user.lastName || '',
         email: user.email || '',
-        phone: user.phoneNumbers || '',
+        phone: user.phoneNumber || '',
       });
-
+      // If user has order history, set it here. Example:
+      // setOrderHistory(user.orders || []); // This line is removed
+    } else {
+      // setOrderHistory([]); // This line is removed
     }
+    // Fetch membership status (placeholder)
     setMembershipStatus('Active');
   }, [user]);
 

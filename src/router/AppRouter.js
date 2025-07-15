@@ -10,6 +10,7 @@ import HomePage from '../pages/public/HomePage';
 import ServicesPage from '../pages/public/ServicesPage';
 import LoginPage from '../pages/public/LoginPage';
 import RegisterPage from '../pages/public/RegisterPage';
+import ProfilePage from '../pages/public/ProfilePage';
 
 // Dashboard Pages
 import DashboardHomePage from '../pages/dashboard/DashboardHomePage';
@@ -32,6 +33,11 @@ const AppRouter = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/services" element={<ServicesPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+
+
+         {/* ======================= NOT FOUND ======================= */}
+        <Route path="*" element={<div style={{padding: '5rem', textAlign: 'center'}}><h1>404 - Không tìm thấy trang</h1></div>} />
       </Route>
 
       {/* ======================= PROTECTED ROUTES (DASHBOARD) ======================= */}
@@ -88,8 +94,8 @@ const AppRouter = () => {
         />
       </Route>
       
-      {/* ======================= NOT FOUND ======================= */}
-      <Route path="*" element={<div style={{padding: '5rem', textAlign: 'center'}}><h1>404 - Không tìm thấy trang</h1></div>} />
+     
+      
     </Routes>
   );
 };
