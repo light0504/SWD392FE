@@ -24,12 +24,8 @@ export default function ProfilePage() {
         email: user.email || '',
         phone: user.phoneNumbers || '',
       });
-      // If user has order history, set it here. Example:
-      // setOrderHistory(user.orders || []); // This line is removed
-    } else {
-      // setOrderHistory([]); // This line is removed
+
     }
-    // Fetch membership status (placeholder)
     setMembershipStatus('Active');
   }, [user]);
 
