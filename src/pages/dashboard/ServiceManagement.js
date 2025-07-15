@@ -129,7 +129,7 @@ const ServiceManagement = () => {
 
             <div className="content-box">
                 <div className="content-header">
-                    <button className="btn-add" onClick={openModal}>Thêm dịch vụ mới</button>
+                    <button className="btn-add" onClick={openModal}>+ Thêm dịch vụ mới</button>
                 </div>
                 
                 <div className="table-container">

@@ -1,20 +1,19 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getAllStaffSchedule } from '../../api/scheduleAPI';
+import { getAllStaffSchedule } from '../../api/serviceapi';
+import { getAllStaff } from '../../api/serviceapi';
 import './DashboardPages.css';
-import './TimeTableSchedule.css'; // Tái sử dụng và mở rộng file CSS này
+import './SchedulePage.css'; // Tái sử dụng file CSS chung cho trang lịch
 
-// --- CÁC HÀM HELPER ---
-const generateTimeSlots = (startHour = 7, endHour = 21) => {
-    const slots = [];
-    for (let i = startHour; i <= endHour; i++) {
-        slots.push(`${String(i).padStart(2, '0')}:00`);
-    }
-    return slots;
+// Hàm helper để chuyển đổi dayOfWeek (0 = Chủ Nhật)
+const getDayName = (dayOfWeek) => {
+    const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+    return (dayOfWeek >= 0 && dayOfWeek < 7) ? days[dayOfWeek] : 'Không xác định';
 };
 
-// --- COMPONENT CHÍNH ---
 const ManagerSchedulePage = () => {
     const [allSchedules, setAllSchedules] = useState([]);
+    const [staffList, setStaffList] = useState([]);
+    const [selectedStaffName, setSelectedStaffName] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -23,111 +22,89 @@ const ManagerSchedulePage = () => {
             setLoading(true);
             setError(null);
             try {
-                const schedulesRes = await getAllStaffSchedule();
-                if (schedulesRes.isSuccess) {
-                    setAllSchedules(schedulesRes.data);
-                } else {
-                    throw new Error(schedulesRes.message || "Lỗi tải lịch làm việc.");
-                }
+                const [schedulesRes, staffRes] = await Promise.all([
+                    getAllStaffSchedule(),
+                    getAllStaff()
+                ]);
+
+                if (schedulesRes.isSuccess) setAllSchedules(schedulesRes.data);
+                else throw new Error(schedulesRes.message || "Lỗi tải lịch làm việc.");
+
+                if (staffRes.isSuccess) setStaffList(staffRes.data);
+                else throw new Error(staffRes.message || "Lỗi tải danh sách nhân viên.");
+
             } catch (err) {
                 setError(err.message);
             } finally {
                 setLoading(false);
             }
         };
+
         fetchData();
     }, []);
 
-    // Sử dụng useMemo để xử lý và cấu trúc lại dữ liệu thành một lưới tổng hợp
-    const timetableData = useMemo(() => {
-        const grid = {};
-        const timeSlots = generateTimeSlots();
-        const daysOfWeek = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'];
-        const dayMap = { 1: 'Chủ Nhật', 2: 'Thứ Hai', 3: 'Thứ Ba', 4: 'Thứ Tư', 5: 'Thứ Năm', 6: 'Thứ Sáu', 7: 'Thứ Bảy' };
+    const displayedSchedules = useMemo(() => {
+        const dataToFilter = allSchedules || [];
+        let schedulesToDisplay = selectedStaffName
+            ? dataToFilter.filter(slot => slot.staffName === selectedStaffName)
+            : dataToFilter;
 
-        // Khởi tạo lưới trống, mỗi ô là một mảng để chứa tên nhân viên
-        daysOfWeek.forEach(day => {
-            grid[day] = {};
-            timeSlots.forEach(time => {
-                grid[day][time] = []; // Mảng chứa danh sách nhân viên làm việc
-            });
+        return [...schedulesToDisplay].sort((a, b) => {
+            if (a.dayOfWeek !== b.dayOfWeek) return a.dayOfWeek - b.dayOfWeek;
+            return a.startTime.localeCompare(b.startTime);
         });
-
-        // Điền tên nhân viên vào các ô tương ứng trên lưới
-        allSchedules.forEach(slot => {
-            const dayName = dayMap[slot.dayOfWeek+1]; // Điều chỉnh nếu cần
-            if (!dayName) return;
-
-            const startHour = parseInt(slot.startTime.split(':')[0], 10);
-            const endHour = parseInt(slot.endTime.split(':')[0], 10);
-
-            for (let i = startHour; i < endHour; i++) {
-                const time = `${String(i).padStart(2, '0')}:00`;
-                if (grid[dayName] && grid[dayName][time]) {
-                    // Thêm tên nhân viên vào mảng của ô giờ đó
-                    grid[dayName][time].push(slot.staffName);
-                }
-            }
-        });
-        return grid;
-    }, [allSchedules]);
+    }, [allSchedules, selectedStaffName]);
 
     const renderContent = () => {
         if (loading) return <div className="loading-spinner"></div>;
         if (error) return <p className="error-message">{error}</p>;
-
-        const timeSlots = generateTimeSlots();
-        const daysOfWeek = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'];
-
+        if (displayedSchedules.length === 0) return <p>Không có lịch làm việc để hiển thị.</p>;
+        
         return (
-            <div className="timetable-container">
-                <table className="timetable manager-timetable">
-                    <thead>
-                        <tr>
-                            <th className="time-col">Giờ</th>
-                            {daysOfWeek.map(day => <th key={day}>{day}</th>)}
+            <table className="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Thứ</th>
+                        <th>Ca Làm Việc</th>
+                        <th>Tên Nhân Viên</th>
+                        <th>Ghi Chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {displayedSchedules.map((slot, index) => (
+                        <tr key={`${slot.staffName}-${index}`}>
+                            <td data-label="Thứ">{getDayName(slot.dayOfWeek)}</td>
+                            <td data-label="Ca Làm Việc">{`${slot.startTime} - ${slot.endTime}`}</td>
+                            <td data-label="Nhân Viên">{slot.staffName}</td>
+                            <td data-label="Ghi Chú">{slot.note || '—'}</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {timeSlots.map(time => (
-                            <tr key={time}>
-                                <td className="time-col">{time}</td>
-                                {daysOfWeek.map(day => {
-                                    const staffInSlot = timetableData[day]?.[time] || [];
-                                    const staffCount = staffInSlot.length;
-                                    const cellClass = staffCount > 0 ? 'slot-occupied' : 'slot-empty';
-
-                                    return (
-                                        <td key={`${day}-${time}`} className={cellClass}>
-                                            {/* Hiển thị số lượng nhân viên */}
-                                            {staffCount > 0 && (
-                                                <div className="slot-content">
-                                                    <span className="staff-count">{staffCount} NV</span>
-                                                    {/* Tooltip sẽ được tạo bằng CSS */}
-                                                    <div className="tooltip">
-                                                        <ul>
-                                                            {staffInSlot.map((name, index) => (
-                                                                <li key={index}>{name}</li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </td>
-                                    );
-                                })}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                    ))}
+                </tbody>
+            </table>
         );
     };
 
     return (
         <div className="dashboard-page">
-            <h1 className="page-title">Tổng Quan Lịch Làm Việc</h1>
-            <p className="page-subtitle">Xem mật độ nhân viên theo từng khung giờ trong tuần.</p>
+            <h1 className="page-title">Quản Lý Lịch Làm Việc</h1>
+            <p className="page-subtitle">Xem và lọc lịch làm việc của toàn bộ nhân viên.</p>
+
+            <div className="filter-container">
+                <label htmlFor="staff-filter">Lọc theo nhân viên:</label>
+                <select
+                    id="staff-filter"
+                    value={selectedStaffName}
+                    onChange={(e) => setSelectedStaffName(e.target.value)}
+                    className="staff-select"
+                    disabled={loading}
+                >
+                    <option value="">-- Xem Tất Cả --</option>
+                    {staffList.map(staff => (
+                        <option key={staff.id} value={staff.fullName}>{staff.fullName}</option>
+                    ))}
+                </select>
+            </div>
+
             <div className="content-box">
                 {renderContent()}
             </div>
