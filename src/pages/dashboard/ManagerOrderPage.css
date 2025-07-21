@@ -1,55 +1,7 @@
 /* src/pages/dashboard/ManagerOrderPage.css */
 
 /* === BỘ LỌC VÀ TÌM KIẾM === */
-.page-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.time-filter-group {
-    display: flex;
-    gap: 0.5rem;
-    background-color: #f1f3f5;
-    padding: 4px;
-    border-radius: 8px;
-}
-
-.time-filter-group button {
-    padding: 0.5rem 1rem;
-    border: none;
-    background-color: transparent;
-    border-radius: 6px;
-    font-weight: 500;
-    color: #495057;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.time-filter-group button.active {
-    background-color: #fff;
-    color: #007bff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.search-container {
-    flex-grow: 1;
-    max-width: 400px;
-}
-
-.search-container input {
-    width: 100%;
-    padding: 0.6rem 1rem;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    font-size: 0.95rem;
-}
-
+/* --- BỘ LỌC TABS --- */
 .filter-tabs {
     display: flex; flex-wrap: wrap; gap: 0.5rem;
     border-bottom: 2px solid #e5e7eb; margin-bottom: 1.5rem;
@@ -63,14 +15,14 @@
 .filter-tabs button:hover { background-color: #f1f3f5; }
 .filter-tabs button.active { background-color: #007bff; color: #fff; border-color: #007bff; }
 
-/* === KHUNG CHỨA BẢNG === */
+/* --- KHUNG CHỨA BẢNG --- */
 .order-table-container {
     border: 1px solid #dee2e6;
     border-radius: 8px;
     overflow: hidden;
 }
 
-/* === HEADER VÀ CÁC HÀNG CỦA BẢNG (DÙNG CSS GRID) === */
+/* --- HEADER VÀ CÁC HÀNG CỦA BẢNG (DÙNG CSS GRID) --- */
 .order-table-header,
 .order-row-main {
     display: grid;
@@ -88,14 +40,14 @@
 .order-row-main { background-color: #fff; cursor: pointer; transition: background-color 0.2s; }
 .order-row-main:hover { background-color: #f1f3f5; }
 
-/* === CÁC Ô TRONG BẢNG === */
+/* --- CÁC Ô TRONG BẢNG --- */
 .cell { padding: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .order-id { font-family: 'Courier New', Courier, monospace; font-weight: 600; }
 .order-status { text-align: center; }
 .order-total { text-align: right; color: #28a745; font-weight: bold; }
 .expand-icon { text-align: center; }
 
-/* === PHẦN CHI TIẾT KHI MỞ RỘNG === */
+/* --- PHẦN CHI TIẾT KHI MỞ RỘNG --- */
 .order-row-details {
     padding: 1rem 2rem 1.5rem 2rem;
     background-color: #f8f9fa;
@@ -115,7 +67,21 @@
 .detail-item-info span { font-size: 0.9rem; color: #6c757d; }
 .detail-item-status { flex-shrink: 0; margin-left: 1rem; }
 
-/* === CÁC STYLE KHÁC === */
+/* --- CÁC STYLE KHÁC --- */
+.status-badge {
+    padding: 5px 10px; border-radius: 12px; font-size: 0.8rem;
+    font-weight: 600; color: #fff; text-transform: capitalize;
+}
+/* Trạng thái Order */
+.status-badge.status-pending { background-color: #ffc107; color: #212529; }
+.status-badge.status-processing { background-color: #0dcaf0; }
+.status-badge.status-done { background-color: #28a745; }
+.status-badge.status-cancelled { background-color: #dc3545; }
+/* Trạng thái OrderDetail */
+.status-badge.status-confirmed { background-color: #007bff; }
+.status-badge.status-in-progress { background-color: #6610f2; }
+.status-badge.status-completed { background-color: #198754; }
+
 .empty-message, .error-message { text-align: center; padding: 2rem; color: #6c757d; }
 
 /* === RESPONSIVE === */

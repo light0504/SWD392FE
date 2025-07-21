@@ -27,6 +27,16 @@ const OrderPage = () => {
     };
     const minDateTime = getMinDateTime();
 
+    const getLocalISOString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+};
+
     // === EFFECTS ===
     // 1. Tải danh sách tất cả dịch vụ
     useEffect(() => {
@@ -117,7 +127,7 @@ const OrderPage = () => {
 
         const orderPayload = {
             customerId: user.id,
-            orderDate: new Date().toISOString(),
+            orderDate: getLocalISOString(new Date()),
             services: selectedServices.flatMap(service =>
                 Array.from({ length: service.quantity }, () => ({
                     serviceId: service.id,
@@ -127,7 +137,7 @@ const OrderPage = () => {
             ),
             note: orderNote,
         };
-
+        console.log("Submitting order:", orderPayload);
         try {
             const response = await createOrder(orderPayload);
             if (response.isSuccess) {
@@ -192,18 +202,19 @@ const OrderPage = () => {
                                             </div>
                                         </div>
                                         <div className="datetime-picker">
-                                            <label htmlFor={`datetime-${service.id}`}>Chọn ngày & giờ (mốc 15 phút):</label>
+                                            <label htmlFor={`datetime-${service.id}`}>Chọn ngày & giờ:</label>
                                             <input
                                                 type="datetime-local"
                                                 id={`datetime-${service.id}`}
                                                 value={service.scheduledTime}
                                                 onChange={(e) => handleDateTimeChange(service.id, e.target.value)}
                                                 min={minDateTime}
-                                                // --- THAY ĐỔI: Thêm thuộc tính step ---
-                                                // 900 giây = 15 phút
                                                 step="900" 
                                             />
                                         </div>
+                                        <small className="datetime-note">
+                                            (Thời gian sẽ được tự động làm tròn đến mốc 15 phút gần nhất)
+                                        </small>
                                     </div>
                                 ))}
                             </div>
@@ -218,13 +229,15 @@ const OrderPage = () => {
                                     <textarea
                                         id="orderNote"
                                         rows="3"
-                                        placeholder="Ví dụ: Thú cưng của tôi hơi nhát, vui lòng nhẹ nhàng..."
+                                        placeholder="Thú cưng của tôi hơi nhát, vui lòng nhẹ nhàng..."
                                         value={orderNote}
                                         onChange={(e) => setOrderNote(e.target.value)}
                                     ></textarea>
                                 </div>
+                                
                                 <p className="total-services">
-                                    Tổng cộng: <strong>{selectedServices.reduce((total, s) => total + s.quantity, 0)} lượt dịch vụ</strong>
+                                    Tổng cộng: <strong>{selectedServices.reduce((total, s) => total + s.quantity, 0)} lượt dịch vụ</strong><br></br>
+                                    Tổng giá: <strong>{selectedServices.reduce((total, s)=> total + s.price * s.quantity, 0)}</strong>
                                 </p>
                                 {error && <p className="error-message">{error}</p>}
                                 <button
