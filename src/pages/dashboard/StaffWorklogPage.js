@@ -1,29 +1,25 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { getStaffOrders, completeOrderDetail, cancelOrderDetail } from '../../api/orderAPI';
+import { getStaffOrders, updateOrderDetailStatus } from '../../api/orderAPI';
 import { getAllCustomers } from '../../api/userAPI';
-import { getOrderDetailStatusInfo, ORDER_DETAIL_STATUS_MAP } from '../../constants/status'; // Import mapping chi tiết
+import { ORDER_DETAIL_STATUS_MAP, getOrderDetailStatusInfo } from '../../constants/status';
 import './DashboardPages.css';
 import './StaffWorklogPage.css';
 
 const formatDate = (dateString) => new Date(dateString).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-const COMPLETED_STATUS = 3; // 'Completed' của OrderDetail là 3
-const CANCELLED_STATUS = 4; // 'Cancelled' của OrderDetail là 4
-const PENDING_STATUS = 0; // 'Pending' của OrderDetail là 0
 
 const StaffWorklogPage = () => {
     const { user } = useAuth();
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [statusFilter, setStatusFilter] = useState('pending'); // Mặc định lọc việc cần làm
+    const [statusFilter, setStatusFilter] = useState('pending');
 
     useEffect(() => {
         const fetchWorklog = async () => {
             if (!user?.id) { setLoading(false); return; }
             setLoading(true);
             try {
-                // Gọi API lấy đơn hàng và danh sách khách hàng cùng lúc
                 const [ordersRes, customersRes] = await Promise.all([
                     getStaffOrders(user.id),
                     getAllCustomers()
@@ -35,13 +31,11 @@ const StaffWorklogPage = () => {
 
                 const customerMap = new Map(customersRes.data.map(c => [c.userId, `${c.lastName} ${c.firstName}`]));
 
-                // "Làm phẳng" dữ liệu: Lấy tất cả orderDetails từ tất cả orders
                 const allDetails = ordersRes.data.flatMap(order => 
                     order.orderDetails.map(detail => ({
                         ...detail,
                         orderId: order.id,
                         customerName: customerMap.get(order.customerId) || 'Khách vãng lai',
-                        orderDate: order.orderDate,
                     }))
                 );
                 setTasks(allDetails);
@@ -50,35 +44,72 @@ const StaffWorklogPage = () => {
         };
         fetchWorklog();
     }, [user]);
-    
+
     const filteredTasks = useMemo(() => {
-        if (statusFilter === 'all') return tasks;
+        const sortedTasks = [...tasks].sort((a, b) => new Date(a.scheduledTime) - new Date(b.scheduledTime));
+        if (statusFilter === 'all') return sortedTasks;
         const key = Object.keys(ORDER_DETAIL_STATUS_MAP).find(k => ORDER_DETAIL_STATUS_MAP[k].class === statusFilter);
-        return tasks.filter(t => t.status === parseInt(key));
+        return sortedTasks.filter(t => t.status === parseInt(key));
     }, [tasks, statusFilter]);
 
-    const updateTaskStatus = (orderDetailId, newStatus) => {
-        setTasks(prev => prev.map(task => 
-            task.id === orderDetailId ? { ...task, status: newStatus } : task
+    const updateTaskOnUI = (orderDetailId, newStatus, newNote = null) => {
+        setTasks(prevTasks => prevTasks.map(task => 
+            task.id === orderDetailId 
+                ? { ...task, status: newStatus, note: newNote !== null ? newNote : task.note } 
+                : task
         ));
     };
 
-    const handleComplete = async (task) => {
-        const note = window.prompt("Nhập ghi chú hoàn thành (nếu có):");
-        if (note === null) return;
+    const handleStatusChange = async (task, newStatus, requiresNote = false) => {
+        let note = "";
+        
+        if (requiresNote) {
+            note = window.prompt("Vui lòng nhập ghi chú hoàn thành (nếu có):");
+            if (note === null) return;
+        } else {
+            const statusText = ORDER_DETAIL_STATUS_MAP[newStatus]?.text.toLowerCase();
+            if (!window.confirm(`Bạn có chắc muốn chuyển trạng thái công việc thành "${statusText}" không?`)) {
+                return;
+            }
+        }
+
         try {
-            await completeOrderDetail(task.id, note);
-            updateTaskStatus(task.id, COMPLETED_STATUS);
-            alert("Công việc đã được cập nhật!");
-        } catch (err) { alert("Cập nhật thất bại!"); }
+            const payload = {
+                orderDetailId: task.id,
+                newStatus: newStatus,
+                note: note
+            };
+            await updateOrderDetailStatus(payload);
+            updateTaskOnUI(task.id, newStatus, note);
+            alert("Cập nhật trạng thái thành công!");
+        } catch (err) {
+            alert("Cập nhật thất bại! Vui lòng thử lại.");
+        }
     };
 
-    const handleCancel = async (task) => {
-        if (!window.confirm("Bạn chắc chắn muốn hủy công việc này?")) return;
-        try {
-            await cancelOrderDetail(task.id);
-            updateTaskStatus(task.id, CANCELLED_STATUS);
-        } catch (err) { alert("Cập nhật thất bại!"); }
+    const renderTaskActions = (task) => {
+        const PENDING = 0;
+        const CONFIRMED = 1;
+        const IN_PROGRESS = 2;
+        const COMPLETED = 3;
+        const CANCELLED = 4;
+
+        switch (task.status) {
+            case PENDING:
+            case CONFIRMED:
+                return (
+                    <>
+                        <button className="btn-action btn-cancel" onClick={() => handleStatusChange(task, CANCELLED)}>Hủy</button>
+                        <button className="btn-action btn-progress" onClick={() => handleStatusChange(task, IN_PROGRESS)}>Bắt đầu</button>
+                    </>
+                );
+            case IN_PROGRESS:
+                return (
+                    <button className="btn-action btn-complete" onClick={() => handleStatusChange(task, COMPLETED, true)}>Hoàn thành</button>
+                );
+            default:
+                return null;
+        }
     };
 
     const renderContent = () => {
@@ -100,13 +131,11 @@ const StaffWorklogPage = () => {
                                 <p><strong>Khách hàng:</strong> {task.customerName}</p>
                                 <p><strong>Lịch hẹn:</strong> {formatDate(task.scheduledTime)}</p>
                                 <p><strong>Mã ĐH:</strong> {task.orderId.substring(0, 8)}</p>
+                                {task.note && <p className="task-note"><strong>Ghi chú:</strong> {task.note}</p>}
                             </div>
-                            {task.status < COMPLETED_STATUS && ( // Hiển thị nút nếu chưa Hoàn thành hoặc Hủy
-                                <div className="task-actions">
-                                    <button className="btn-action btn-cancel" onClick={() => handleCancel(task)}>Hủy</button>
-                                    <button className="btn-action btn-complete" onClick={() => handleComplete(task)}>Hoàn thành</button>
-                                </div>
-                            )}
+                            <div className="task-actions">
+                                {renderTaskActions(task)}
+                            </div>
                         </div>
                     );
                 })}

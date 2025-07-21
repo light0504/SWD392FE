@@ -7,7 +7,7 @@ import './OrderHistoryPage.css';
 
 const formatDate = (dateString) => new Date(dateString).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-const COMPLETED_DETAIL_STATUS = 3; // Trạng thái 'Completed' của OrderDetail
+const COMPLETED_DETAIL_STATUS = 3; // 'Completed' của OrderDetail là 3
 
 const OrderHistoryPage = () => {
     const { user } = useAuth();
@@ -15,9 +15,9 @@ const OrderHistoryPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeFilter, setActiveFilter] = useState('all');
+    const [expandedOrderId, setExpandedOrderId] = useState(null);
     const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
     const [selectedDetailForRating, setSelectedDetailForRating] = useState(null);
-    const [expandedOrderId, setExpandedOrderId] = useState(null);
 
     useEffect(() => {
         const fetchHistory = async () => {
@@ -34,31 +34,25 @@ const OrderHistoryPage = () => {
         fetchHistory();
     }, [user]);
 
-    const handleOpenRatingModal = (detail) => {
-        setSelectedDetailForRating(detail);
-        setIsRatingModalOpen(true);
-    };
-
-    const toggleDetails = (orderId) => {
-        // Nếu đang click vào đơn hàng đã mở, thì đóng nó lại (set về null)
-        // Nếu click vào đơn hàng mới, thì mở nó ra
-        setExpandedOrderId(prevId => (prevId === orderId ? null : orderId));
-    };
-
-    const handleRatingSuccess = (orderDetailId, newScore) => {
-        setOrders(prevOrders => prevOrders.map(order => ({
-            ...order,
-            orderDetails: order.orderDetails.map(detail =>
-                detail.orderDetailId === orderDetailId ? { ...detail, rating: newScore } : detail
-            )
-        })));
-    };
-    
     const filteredOrders = useMemo(() => {
         if (activeFilter === 'all') return orders;
         const key = Object.keys(ORDER_STATUS_MAP).find(k => ORDER_STATUS_MAP[k].class === activeFilter);
         return orders.filter(o => o.status === parseInt(key));
     }, [orders, activeFilter]);
+    
+    const toggleDetails = (orderId) => setExpandedOrderId(prevId => (prevId === orderId ? null : orderId));
+    const handleOpenRatingModal = (detail) => {
+        setSelectedDetailForRating(detail);
+        setIsRatingModalOpen(true);
+    };
+    const handleRatingSuccess = (orderDetailId, newScore) => {
+        setOrders(prevOrders => prevOrders.map(order => ({
+            ...order,
+            orderDetails: order.orderDetails.map(detail =>
+                detail.id === orderDetailId ? { ...detail, rating: newScore } : detail
+            )
+        })));
+    };
 
     const renderContent = () => {
         if (loading) return <div className="loading-spinner"></div>;
@@ -79,7 +73,6 @@ const OrderHistoryPage = () => {
                     <div className="order-list">
                         {filteredOrders.map(order => {
                             const statusInfo = getOrderStatusInfo(order.status);
-                            // Kiểm tra xem đơn hàng này có đang được mở không
                             const isExpanded = expandedOrderId === order.id;
 
                             return (
@@ -91,19 +84,17 @@ const OrderHistoryPage = () => {
                                         </div>
                                         <div className="header-status">
                                             <span className={`status-badge status-${statusInfo.class}`}>{statusInfo.text}</span>
-                                            {/* Thay đổi icon mũi tên dựa trên state isExpanded */}
                                             <span className={`expand-icon ${isExpanded ? 'expanded' : ''}`}>▼</span>
                                         </div>
                                     </div>
                                     
-                                    {/* --- HIỂN THỊ CÓ ĐIỀU KIỆN PHẦN CHI TIẾT --- */}
                                     {isExpanded && (
                                         <div className="order-details-list">
                                             {order.orderDetails.map(detail => {
                                                 const detailStatusInfo = getOrderDetailStatusInfo(detail.status);
                                                 return (
-                                                    <>
-                                                        <div key={detail.id} className="order-detail-item">
+                                                    <div key={detail.id} className="order-detail-wrapper">
+                                                        <div className="order-detail-item">
                                                             <span className="service-name">{detail.serviceName}</span>
                                                             <div className="detail-actions">
                                                                 {detail.status === COMPLETED_DETAIL_STATUS && !detail.rating && (
@@ -112,13 +103,13 @@ const OrderHistoryPage = () => {
                                                                 {detail.rating && <span className="rated-stars">{`★ ${detail.rating}`}</span>}
                                                                 <span className={`status-badge status-${detailStatusInfo.class}`}>{detailStatusInfo.text}</span>
                                                             </div>
-                                                            {detail.note && (
+                                                        </div>
+                                                        {detail.note && (
                                                             <div className="order-detail-note">
                                                                 <strong>Ghi chú của nhân viên:</strong> {detail.note}
                                                             </div>
                                                         )}
-                                                        </div>
-                                                    </>
+                                                    </div>
                                                 );
                                             })}
                                         </div>
@@ -132,9 +123,7 @@ const OrderHistoryPage = () => {
                             );
                         })}
                     </div>
-                ) : (
-                    <p className="empty-message">Không có đơn hàng nào phù hợp.</p>
-                )}
+                ) : ( <p className="empty-message">Không có đơn hàng nào phù hợp.</p> )}
             </>
         );
     };

@@ -1,12 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import useCart from '../../hooks/useCart';
 import { getAllServices } from '../../api/serviceapi';
 import { createOrder } from '../../api/orderAPI';
 import './OrderPage.css';
 
+// --- HÀM HELPER 1: Làm tròn phút của một đối tượng Date ---
+const snapTimeToQuarterHour = (date) => {
+    const minutes = date.getMinutes();
+    // Công thức làm tròn đến bội số của 15
+    const roundedMinutes = Math.round(minutes / 15) * 15;
+    date.setMinutes(roundedMinutes, 0, 0); // Đặt lại phút, reset giây và mili giây
+    return date;
+};
+
+// --- HÀM HELPER 2: Chuyển đổi một đối tượng Date sang chuỗi cho input ---
+// Input type="datetime-local" cần định dạng "YYYY-MM-DDTHH:mm"
+const toInputDateTimeString = (date) => {
+    // Bù lại múi giờ để toISOString không chuyển về UTC
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    // Cắt chuỗi để có định dạng YYYY-MM-DDTHH:mm
+    return date.toISOString().slice(0, 16);
+};
+
+// --- HÀM HELPER 3: Chuyển chuỗi từ input sang đối tượng Date ---
+const fromInputDateTimeString = (str) => {
+    return str ? new Date(str) : null;
+};
+
+// --- HÀM HELPER 4: Chuyển đổi Date object sang chuỗi local ISO ---
+const getLocalISOString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+};
+
+
 const OrderPage = () => {
     const { user } = useAuth();
+    const { clearCart } = useCart();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -17,38 +54,18 @@ const OrderPage = () => {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
-
-    // === HELPERS ===
-    // Tạo chuỗi thời gian hợp lệ cho thuộc tính 'min' của input datetime-local
-    const getMinDateTime = () => {
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        return now.toISOString().slice(0, 16);
-    };
-    const minDateTime = getMinDateTime();
-
-    const getLocalISOString = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-};
+    
+    // Lấy thời gian tối thiểu một lần để tối ưu
+    const minDateTime = toInputDateTimeString(new Date());
 
     // === EFFECTS ===
-    // 1. Tải danh sách tất cả dịch vụ
     useEffect(() => {
         const fetchServices = async () => {
             setLoading(true);
             try {
                 const response = await getAllServices();
-                if (response.isSuccess) {
-                    setAllServices(response.data);
-                } else {
-                    setError("Không thể tải danh sách dịch vụ.");
-                }
+                if (response.isSuccess) setAllServices(response.data);
+                else setError("Không thể tải danh sách dịch vụ.");
             } catch (err) {
                 setError("Lỗi kết nối máy chủ.");
             } finally {
@@ -58,20 +75,16 @@ const OrderPage = () => {
         fetchServices();
     }, []);
 
-    // 2. Khởi tạo danh sách dịch vụ đã chọn từ giỏ hàng (nếu có)
     useEffect(() => {
         const cartItems = location.state?.cartItemsFromSidebar;
         if (cartItems && Array.isArray(cartItems) && cartItems.length > 0) {
             const initialServices = cartItems.map(item => ({
-                ...item,
-                quantity: 1,
-                scheduledTime: ''
+                ...item, quantity: 1, scheduledTime: ''
             }));
             setSelectedServices(initialServices);
         }
     }, [location.state]);
 
-    // 3. Kiểm tra đăng nhập và chuyển hướng nếu cần
     useEffect(() => {
         if (!loading && !user) {
             navigate('/login', { state: { from: location } });
@@ -79,19 +92,22 @@ const OrderPage = () => {
     }, [user, loading, navigate, location]);
 
     // === EVENT HANDLERS ===
-    // Xử lý khi chọn/bỏ chọn dịch vụ
     const handleServiceToggle = (service) => {
         setSelectedServices(prev => {
             const isSelected = prev.some(s => s.id === service.id);
             if (isSelected) {
                 return prev.filter(s => s.id !== service.id);
             } else {
-                return [...prev, { ...service, quantity: 1, scheduledTime: '' }];
+                // Khi thêm mới, tự động gán thời gian hiện tại đã được làm tròn
+                const now = new Date();
+                const roundedNow = snapTimeToQuarterHour(now);
+                const initialTime = toInputDateTimeString(roundedNow);
+
+                return [...prev, { ...service, quantity: 1, scheduledTime: initialTime }];
             }
         });
     };
 
-    // Xử lý thay đổi số lượng
     const handleQuantityChange = (serviceId, amount) => {
         setSelectedServices(prev =>
             prev.map(s => {
@@ -104,14 +120,18 @@ const OrderPage = () => {
         );
     };
 
-    // Xử lý thay đổi ngày giờ
     const handleDateTimeChange = (serviceId, value) => {
+        if (!value) return; // Bỏ qua nếu giá trị rỗng
+        
+        const dateObject = fromInputDateTimeString(value);
+        const snappedDate = snapTimeToQuarterHour(dateObject);
+        const finalValueString = toInputDateTimeString(snappedDate);
+        
         setSelectedServices(prev =>
-            prev.map(s => (s.id === serviceId ? { ...s, scheduledTime: value } : s))
+            prev.map(s => (s.id === serviceId ? { ...s, scheduledTime: finalValueString } : s))
         );
     };
 
-    // Xử lý gửi đơn hàng
     const handleSubmitOrder = async () => {
         if (selectedServices.length === 0) {
             alert("Vui lòng chọn ít nhất một dịch vụ.");
@@ -131,18 +151,19 @@ const OrderPage = () => {
             services: selectedServices.flatMap(service =>
                 Array.from({ length: service.quantity }, () => ({
                     serviceId: service.id,
-                    // Gửi đi chuỗi thời gian địa phương, không chuyển đổi
-                    scheduledTime: service.scheduledTime,
+                    scheduledTime: service.scheduledTime, // Gửi đi chuỗi local time
                 }))
             ),
             note: orderNote,
         };
-        console.log("Submitting order:", orderPayload);
+
         try {
             const response = await createOrder(orderPayload);
+            console.log("Order response:", response);
             if (response.isSuccess) {
-                alert("Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.");
-                navigate('/');
+                const newOrderId = response.data.id;
+                clearCart();
+                navigate('/order-success', { state: { orderId: newOrderId } });
             } else {
                 setError(response.message || "Đặt lịch thất bại.");
             }
@@ -152,9 +173,11 @@ const OrderPage = () => {
             setSubmitting(false);
         }
     };
+    
+    const totalPrice = selectedServices.reduce((total, s) => total + s.price * s.quantity, 0);
 
+    // === RENDER ===
     if (loading) return <div className="page-loading">Đang tải danh sách dịch vụ...</div>;
-
 
     return (
         <div className="order-page">
@@ -178,7 +201,7 @@ const OrderPage = () => {
                                         <p>{service.description}</p>
                                     </div>
                                     <div className="service-price">
-                                        {new Intl.NumberFormat('vi-VN').format(service.price)}đ
+                                        {service.price}đ
                                     </div>
                                 </div>
                             ))}
@@ -211,10 +234,10 @@ const OrderPage = () => {
                                                 min={minDateTime}
                                                 step="900" 
                                             />
+                                            <small className="datetime-note">
+                                                (Thời gian sẽ được làm tròn đến mốc 15 phút)
+                                            </small>
                                         </div>
-                                        <small className="datetime-note">
-                                            (Thời gian sẽ được tự động làm tròn đến mốc 15 phút gần nhất)
-                                        </small>
                                     </div>
                                 ))}
                             </div>
@@ -236,8 +259,9 @@ const OrderPage = () => {
                                 </div>
                                 
                                 <p className="total-services">
-                                    Tổng cộng: <strong>{selectedServices.reduce((total, s) => total + s.quantity, 0)} lượt dịch vụ</strong><br></br>
-                                    Tổng giá: <strong>{selectedServices.reduce((total, s)=> total + s.price * s.quantity, 0)}</strong>
+                                    Tổng cộng: <strong>{selectedServices.reduce((total, s) => total + s.quantity, 0)} lượt dịch vụ</strong>
+                                    <br />
+                                    Tổng giá: <strong>{totalPrice}</strong>
                                 </p>
                                 {error && <p className="error-message">{error}</p>}
                                 <button

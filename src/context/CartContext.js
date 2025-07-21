@@ -1,55 +1,87 @@
-// src/context/CartContext.js
-import React, { createContext, useState} from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 
 // Tạo Context
 const CartContext = createContext();
 
 // Tạo Provider Component
-export const CartProvider = ({ children }) => {
-  // State để lưu trữ các dịch vụ trong giỏ và trạng thái mở/đóng của giỏ hàng
-  const [cartItems, setCartItems] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+const CartProvider = ({ children }) => {
+    // State chính để lưu trữ các dịch vụ trong giỏ
+    const [cartItems, setCartItems] = useState([]);
+    // State để quản lý việc mở/đóng sidebar giỏ hàng
+    const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Hàm thêm dịch vụ vào giỏ hàng
-  const addToCart = (serviceToAdd) => {
-    // Kiểm tra xem dịch vụ đã có trong giỏ chưa
-    const isItemInCart = cartItems.find((item) => item.id === serviceToAdd.id);
+    // Sử dụng useEffect để tải giỏ hàng từ localStorage khi ứng dụng khởi động
+    useEffect(() => {
+        try {
+            const savedCart = localStorage.getItem('cartItems');
+            if (savedCart) {
+                setCartItems(JSON.parse(savedCart));
+            }
+        } catch (error) {
+            console.error("Failed to parse cart items from localStorage", error);
+        }
+    }, []);
 
-    if (isItemInCart) {
-      // Nếu đã có, có thể hiển thị thông báo hoặc không làm gì cả
-      // Ở đây chúng ta sẽ mở giỏ hàng để người dùng thấy nó đã ở đó
-      console.warn("Dịch vụ này đã có trong giỏ hàng.");
-    } else {
-      // Nếu chưa có, thêm vào mảng cartItems
-      setCartItems([...cartItems, { ...serviceToAdd, quantity: 1 }]);
-    }
-  };
+    // Sử dụng useEffect để lưu giỏ hàng vào localStorage mỗi khi nó thay đổi
+    useEffect(() => {
+        localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    }, [cartItems]);
 
-  // Hàm xóa dịch vụ khỏi giỏ hàng
-  const removeFromCart = (serviceId) => {
-    setCartItems(cartItems.filter((item) => item.id !== serviceId));
-  };
+    // --- CÁC HÀM XỬ LÝ GIỎ HÀNG ---
 
-  // Hàm mở giỏ hàng
-  const openCart = () => setIsCartOpen(true);
+    const addToCart = (service) => {
+        setCartItems(prevItems => {
+            // Kiểm tra xem dịch vụ đã có trong giỏ chưa
+            const isItemInCart = prevItems.find(item => item.id === service.id);
+            if (isItemInCart) {
+                // Nếu đã có, có thể bạn muốn tăng số lượng, nhưng ở đây ta chỉ cần thông báo
+                alert(`${service.name} đã có trong giỏ hàng.`);
+                return prevItems;
+            }
+            // Nếu chưa có, thêm vào giỏ
+            return [...prevItems, service];
+        });
+        // Tự động mở giỏ hàng khi thêm sản phẩm mới
+        openCart();
+    };
 
-  // Hàm đóng giỏ hàng
-  const closeCart = () => setIsCartOpen(false);
-  
-  // Các giá trị sẽ được cung cấp cho toàn bộ ứng dụng
-  const value = {
-    cartItems,
-    isCartOpen,
-    addToCart,
-    removeFromCart,
-    openCart,
-    closeCart,
-    // Giá trị dẫn xuất: tổng số lượng và tổng tiền
-    cartItemCount: cartItems.length,
-    totalPrice: cartItems.reduce((total, item) => total + item.price, 0),
-  };
+    const removeFromCart = (serviceId) => {
+        setCartItems(prevItems => prevItems.filter(item => item.id !== serviceId));
+    };
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+    // --- HÀM MỚI ĐỂ XÓA TOÀN BỘ GIỎ HÀNG ---
+    const clearCart = () => {
+        setCartItems([]); // Đơn giản là đặt lại mảng về rỗng
+    };
+
+    // --- CÁC HÀM QUẢN LÝ GIAO DIỆN ---
+
+    const openCart = () => setIsCartOpen(true);
+    const closeCart = () => setIsCartOpen(false);
+
+    // Tính toán tổng giá tiền và số lượng item mỗi khi giỏ hàng thay đổi
+    const cartItemCount = cartItems.length;
+    const totalPrice = cartItems.reduce((total, item) => total + item.price, 0);
+
+    // Giá trị sẽ được cung cấp cho toàn bộ ứng dụng
+    const value = {
+        cartItems,
+        addToCart,
+        removeFromCart,
+        clearCart, // <-- Cung cấp hàm này
+        cartItemCount,
+        totalPrice,
+        isCartOpen,
+        openCart,
+        closeCart,
+    };
+
+    return (
+        <CartContext.Provider value={value}>
+            {children}
+        </CartContext.Provider>
+    );
 };
 
+export { CartProvider, CartContext };
 export default CartContext;

@@ -1,54 +1,138 @@
 /* src/pages/public/OrderHistoryPage.css */
 
-.user-page-container { padding: 3rem 0; background-color: #f9fafb; min-height: calc(100vh - 160px); }
-.user-page-container .container { max-width: 900px; margin: 0 auto; padding: 0 1rem; }
-.user-page-container .page-title { text-align: center; font-size: 2.5rem; color: #1f2937; margin-bottom: 0.5rem; }
-.user-page-container .page-subtitle { text-align: center; font-size: 1.1rem; color: #6b7280; margin-bottom: 3rem; }
-.user-page-container .content-box { background-color: #fff; padding: 1.5rem 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.user-page-container {
+    padding: 3rem 0;
+    background-color: #f9fafb;
+    min-height: calc(100vh - 160px);
+}
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+.page-title {
+    text-align: center;
+    font-size: 2.5rem;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+.page-subtitle {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #6b7280;
+    margin-bottom: 3rem;
+}
+.content-box {
+    background-color: #fff;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
 
 .filter-tabs {
-    display: flex; flex-wrap: wrap; gap: 0.75rem;
-    border-bottom: 2px solid #e5e7eb; margin-bottom: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    border-bottom: 2px solid #e5e7eb;
+    margin-bottom: 2rem;
 }
 .filter-tabs button {
-    padding: 0.75rem 1rem; border: none; background: none;
-    font-weight: 600; color: #6b7280; cursor: pointer;
-    border-bottom: 3px solid transparent; transform: translateY(2px);
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: none;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transform: translateY(2px);
     transition: color 0.2s, border-color 0.2s;
 }
 .filter-tabs button:hover { color: #1f2937; }
-.filter-tabs button.active { color: black; border-bottom-color: #007bff; }
+.filter-tabs button.active { color: #007bff; border-bottom-color: #007bff; }
 
-.order-list { display: flex; flex-direction: column; gap: 1.5rem; }
-.order-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
-.order-card-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb; }
-.order-id { font-weight: 600; color: #1f2937; }
-.order-date { font-size: 0.9rem; color: #6b7280; margin-left: 1rem; }
-
-.order-details-list { padding: 0.5rem 1.5rem; }
-.order-detail-item { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px dotted #e5e7eb; }
-.order-detail-item:last-child { border-bottom: none; }
-
-/* === STYLE MỚI CHO TÊN DỊCH VỤ VÀ NHÂN VIÊN === */
-.detail-info {
+.order-list {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    gap: 1.5rem;
 }
-.service-name {
-    font-weight: 500;
-    color: #374151;
+.order-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
-.staff-name {
-    font-size: 0.85rem;
-    color: #6b7280;
-    margin-top: 4px;
-    font-style: italic;
-}
-/* ============================================== */
 
-.btn-rate { background-color: #f9c74f; color: #212529; border: none; border-radius: 5px; padding: 5px 10px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; margin-right: 5px;}
-.btn-rate:hover { background-color: #f3b71c; }
+.order-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.order-card-header:hover { background-color: #f9fafb; }
+.header-info { display: flex; align-items: center; gap: 1rem; }
+.order-id { font-weight: 600; color: #1f2937; }
+.order-date { font-size: 0.9rem; color: #6b7280; }
+.header-status { display: flex; align-items: center; gap: 1rem; }
+.expand-icon { font-size: 0.8rem; color: #6b7280; transition: transform 0.3s ease-in-out; }
+.expand-icon.expanded { transform: rotate(180deg); }
+
+.order-details-list {
+    padding: 0.5rem 1.5rem 1rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    animation: slideDown 0.4s ease-out;
+}
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* 
+  ======================================================
+  ===              PHẦN SỬA ĐỔI QUAN TRỌNG           ===
+  ======================================================
+*/
+.order-detail-wrapper {
+    padding: 1rem 0;
+    border-bottom: 1px dotted #e5e7eb;
+}
+.order-details-list .order-detail-wrapper:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.order-details-list .order-detail-wrapper:first-child {
+    padding-top: 0;
+}
+
+.order-detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+.service-name { font-weight: 600; color: #374151; }
+.detail-actions { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
+
+.order-detail-note {
+    background-color: #f8f9fa;
+    border-left: 3px solid #6b7280;
+    padding: 0.75rem 1rem;
+    margin-top: 0.75rem; /* Tạo khoảng cách với dòng trên */
+    font-size: 0.9rem;
+    color: #495057;
+    border-radius: 0 4px 4px 0;
+}
+.order-detail-note strong { color: #212529; }
+/* ====================================================== */
+
+
+.order-card-footer {
+    display: flex; justify-content: flex-end; align-items: center;
+    gap: 1rem; padding: 1rem 1.5rem;
+    background-color: #f9fafb; border-top: 1px solid #e5e7eb;
+    font-weight: 600;
+}
+.order-total { font-size: 1.2rem; color: #16a34a; }
+
+.btn-rate { background-color: #ffc107; color: #212529; border-radius: 5px; padding: 5px 10px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; border: none;}
 .rated-stars { font-weight: bold; color: #f9c74f; font-size: 1.1rem; }
 
 .order-card-footer { display: flex; justify-content: flex-end; align-items: center; gap: 1rem; padding: 1rem 1.5rem; background-color: #f9fafb; border-top: 1px solid #e5e7eb; font-weight: 600; }
