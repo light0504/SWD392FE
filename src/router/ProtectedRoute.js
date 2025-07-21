@@ -10,10 +10,13 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  const hasPermission =
+    allowedRoles && user.roles?.some(role => allowedRoles.includes(role));
+
+  if (!hasPermission) {
     return <Navigate to="/dashboard/access-denied" replace />;
   }
-  
+
   return children;
 };
 

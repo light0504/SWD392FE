@@ -4,12 +4,12 @@ import './DashboardPages.css'; // Tái sử dụng CSS chung
 
 const DashboardHomePage = () => {
     const { user } = useAuth();
-
+    console.log('Current user:', user);
     return (
         <div className="dashboard-page">
             <h1 className="page-title">Tổng quan</h1>
             <div className="welcome-card">
-                <h2>Xin chào, {user.name}!</h2>
+                <h2>Xin chào, {user.firstName}!</h2>
                 <p>
                     Chào mừng bạn trở lại với hệ thống quản lý của PetSpa.
                 </p>

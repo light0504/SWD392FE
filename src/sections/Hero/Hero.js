@@ -13,7 +13,7 @@ const Hero = () => {
           Trải nghiệm dịch vụ chăm sóc 5 sao từ trái tim, mang đến vẻ đẹp và sức khỏe
           toàn diện cho những người bạn bốn chân.
         </p>
-        <Link to="/dich-vu" className="btn btn-primary">Xem Tất Cả Dịch Vụ</Link>
+        <Link to="/services" className="btn btn-primary">Xem Tất Cả Dịch Vụ</Link>
       </div>
     </section>
   );

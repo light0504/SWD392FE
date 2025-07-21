@@ -5,13 +5,18 @@
 
 .sidebar {
   width: 250px;
-  background: #2c3e50;
+  background: #509b4f;
   color: #ecf0f1;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   transition: width 0.3s ease;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  align-self: flex-start;
+  z-index: 100;
 }
 .sidebar-profile h3 { color: #fff; }
 .sidebar-profile p { color: #bdc3c7; margin-bottom: 2rem; }
@@ -29,7 +34,7 @@
   white-space: nowrap;
 }
 .sidebar nav a:hover, .sidebar nav a.active {
-  background: #34495e;
+  background: #554cf4;
   color: white;
 }
 .btn-logout { padding: 0.8rem; background: var(--danger-color); color: white; border:none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease;}
@@ -38,7 +43,15 @@
 
 @media (max-width: 768px) {
   .dashboard-container { flex-direction: column; }
-  .sidebar { width: 100%; height: auto; flex-direction: row; align-items: center; padding: 1rem; flex-wrap: wrap; }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    padding: 1rem;
+    flex-wrap: wrap;
+    position: static;
+  }
   .sidebar-profile { display: none; }
   .sidebar nav { flex-direction: row; flex-grow: 1; gap: 0.5rem; justify-content: flex-start; }
   .sidebar nav a { padding: 0.5rem 0.8rem; }

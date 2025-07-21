@@ -1,0 +1,109 @@
+/* src/pages/dashboard/TimeTableSchedule.css */
+
+.timetable-container {
+    overflow-x: auto;
+    position: relative;
+    padding-top: 5px; /* Tạo không gian cho vạch chỉ báo */
+}
+
+.timetable {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    /* Định nghĩa biến CSS để tính toán vị trí */
+    --time-col-width: 80px;
+    --day-col-width: calc((100% - var(--time-col-width)) / 7);
+}
+
+.timetable th,
+.timetable td {
+    border: 1px solid #e9ecef;
+    padding: 4px;
+    text-align: center;
+    height: 50px;
+    vertical-align: middle;
+    font-size: 0.8rem;
+    position: relative; /* Cần thiết cho pseudo-element ::after */
+}
+
+.timetable thead th {
+    background-color: #f8f9fa;
+    padding: 10px 5px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.timetable .time-col {
+    width: var(--time-col-width);
+    min-width: var(--time-col-width);
+    background-color: #f8f9fa;
+    font-weight: 600;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+}
+
+/* === STYLE HIGHLIGHT NGÀY HÔM NAY === */
+.timetable th.is-today {
+    color: #007bff;
+    background-color: #e7f3ff;
+}
+
+/* Sử dụng ::after để tạo một lớp phủ màu mà không ghi đè màu trạng thái */
+.timetable td.is-today::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #e7f3ff; /* Màu nền xanh nhạt */
+    opacity: 0.4;
+    z-index: -1; /* Đặt lớp phủ nằm dưới nội dung của ô */
+}
+/* ==================================== */
+
+/* --- TÔ MÀU CÁC Ô --- */
+/* 1. Ngoài giờ làm */
+.timetable td.slot-free { background-color: #f8d7da; opacity: 0.6; }
+/* 2. Ca trống */
+.timetable td.slot-available { background-color: #d1e7dd; color: #0f5132; font-style: italic; opacity: 0.8; }
+/* 3. Đã có lịch hẹn */
+.timetable td.slot-booked { background-color: #cce5ff; vertical-align: top; padding-top: 6px; }
+
+/* --- STYLE CHO NỘI DUNG TRONG Ô --- */
+.task-info, .available-text {
+    position: relative;
+    z-index: 1; /* Nâng nội dung lên trên lớp phủ highlight */
+}
+.task-info { font-size: 0.75rem; text-align: left; padding: 0 4px; height: 100%; overflow: hidden; }
+.task-item { margin-bottom: 2px; align-items: center; display: flex; justify-content: space-between; }
+.task-service { font-weight: 600; color: #004085; }
+.task-customer { color: #383d41; }
+.available-text { font-size: 0.8rem; }
+
+/* --- THANH ĐÁNH DẤU THỜI GIAN HIỆN TẠI --- */
+.time-indicator {
+    position: absolute;
+    height: 2px;
+    background-color: #e44d26;
+    width: var(--day-col-width);
+    z-index: 3;
+    pointer-events: none;
+    left: calc(var(--time-col-width) + var(--day-col-width) * var(--current-day-index));
+    transition: left 0.5s ease-out, top 0.5s ease-out;
+}
+
+.time-indicator-dot {
+    position: absolute;
+    top: -5px;
+    left: -6px;
+    width: 12px;
+    height: 12px;
+    background-color: #e44d26;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
