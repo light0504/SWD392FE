@@ -17,6 +17,28 @@ const loginUser = async (email, password) => {
   }
 };
 
+/**
+ * Update the current user's profile information
+ * @param {object} userData - Only the fields that need to be updated
+ * @returns {Promise<object>}
+ */
+const updateUserProfile = async (changedFields) => {
+  try {
+    // Only send the fields that have values
+    const updateData = Object.fromEntries(
+      Object.entries(changedFields).filter(([_, value]) => value !== undefined && value !== '')
+    );
+    
+    const response = await apiClient.put('/Customers/me', updateData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    if (error.response && error.response.data) {
+      return error.response.data;
+    }
+    throw error;
+  }
+};
 
 /**
  * Gửi thông tin để đăng ký tài khoản mới.
@@ -41,4 +63,4 @@ const registerUser = async (userData) => {
 // const logoutUser = async () => { ... }
 // const refreshToken = async () => { ... }
 
-export { loginUser, registerUser };
+export { loginUser, registerUser, updateUserProfile };
