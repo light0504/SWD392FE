@@ -62,8 +62,8 @@ const ServiceManagement = () => {
         };
 
         try {
-            const response = await createService('Service', payload);
-            if (response.data && response.data.isSuccess) {
+            const response = await createService(payload);
+            if (response.isSuccess) {
                 alert('Tạo dịch vụ mới thành công!');
                 closeModal();
                 fetchServices(); // <-- Tải lại danh sách để cập nhật
@@ -86,7 +86,7 @@ const ServiceManagement = () => {
 
         try {
             // API DELETE thường không trả về body, chỉ cần check status 2xx
-            await deleteService('Service', serviceId);
+            await deleteService(serviceId);
             alert('Xóa dịch vụ thành công!');
             // Cập nhật UI bằng cách lọc ra dịch vụ đã xóa
             setServices(services.filter(s => s.id !== serviceId));
