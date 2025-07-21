@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-// import { loginUser } from '../../api/authAPI';
 import './LoginPage.css';
 
 const LoginPage = () => {
@@ -9,21 +8,22 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // State cho form
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const redirectFrom = location.state?.from?.pathname || null;
+  // Lấy state từ trang trước để xử lý điều hướng và chuyển tiếp dữ liệu
+  const fromPath = location.state?.from?.pathname || null;
+  const cartItemsFromPrevPage = location.state?.cartItemsFromSidebar || null;
   const successMessage = location.state?.message;
 
-  const getRedirectPath = (roles) => {
-    if (roles.some(role => ['Manager', 'Staff', 'MANAGER', 'STAFF'].includes(role))) {
-      console.log(roles);
+  const getRedirectPathBasedOnRole = (roles) => {
+    if (roles.some(role => ['MANAGER', 'STAFF'].includes(role))) {
       return '/dashboard';
     }
-    console.log(roles);
-    return '/';
+    return '/'; // Mặc định cho USER
   };
 
   const handleSubmit = async (e) => {
@@ -32,23 +32,24 @@ const LoginPage = () => {
     setError(null);
 
     try {
-      // console.log('Logging in with:', { email, password });
+      const response = await login(email, password); // Gọi hàm login từ AuthContext
 
-      const response = await login(email, password);
-      // console.log(response);
-      if (response.success) {
-        // console.log('user: ', sessionStorage.getItem('user'));
-        const roles = response.data.roles;
-        login(response.data); // save to auth context
+      if (response.isSuccess) {
+        // Ưu tiên chuyển hướng về trang người dùng muốn vào trước đó (ví dụ: /order)
+        const redirectTo = fromPath || getRedirectPathBasedOnRole(response.data.roles);
 
-        const redirectTo = redirectFrom || getRedirectPath(roles);
-        navigate(redirectTo, { replace: true });
+        // Khi điều hướng, "mang theo" (chuyển tiếp) dữ liệu giỏ hàng đã nhận được
+        navigate(redirectTo, { 
+          replace: true, // Thay thế trang login trong lịch sử trình duyệt
+          state: {
+            cartItemsFromSidebar: cartItemsFromPrevPage
+          }
+        });
       } else {
         setError(response?.message || 'Thông tin đăng nhập không chính xác.');
       }
     } catch (err) {
-      console.error('Login failed:', err);
-      setError('Không thể kết nối đến máy chủ.');
+      setError('Không thể kết nối đến máy chủ. Vui lòng thử lại.');
     } finally {
       setIsLoading(false);
     }

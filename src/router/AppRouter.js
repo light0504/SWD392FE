@@ -11,11 +11,12 @@ import ServicesPage from '../pages/public/ServicesPage';
 import LoginPage from '../pages/public/LoginPage';
 import RegisterPage from '../pages/public/RegisterPage';
 import ProfilePage from '../pages/public/ProfilePage';
+import OrderPage from '../pages/public/OrderPage';
 
 // Dashboard Pages
 import DashboardHomePage from '../pages/dashboard/DashboardHomePage';
-import StaffSchedulePage from '../pages/dashboard/StaffSchedulePage';       // <-- IMPORT MỚI
-import ManagerSchedulePage from '../pages/dashboard/ManagerSchedulePage';   // <-- IMPORT MỚI
+import StaffSchedulePage from '../pages/dashboard/StaffSchedulePage'; 
+import ManagerSchedulePage from '../pages/dashboard/ManagerSchedulePage';
 import RevenueReportPage from '../pages/dashboard/RevenueReportPage';
 import ServiceManagementPage from '../pages/dashboard/ServiceManagement';
 import AccessDeniedPage from '../pages/dashboard/AccessDeniedPage';
@@ -34,6 +35,7 @@ const AppRouter = () => {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/order" element={<OrderPage />} />
 
 
          {/* ======================= NOT FOUND ======================= */}

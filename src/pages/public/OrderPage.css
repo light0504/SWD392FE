@@ -1,0 +1,136 @@
+.order-page {
+    padding: 3rem 0;
+    background-color: #f9fafb;
+    min-height: 100vh;
+}
+
+.order-page .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.order-page .page-title {
+    text-align: center;
+    font-size: 2.5rem;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.order-page .page-subtitle {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #6b7280;
+    margin-bottom: 3rem;
+}
+
+.order-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+/* Panel danh sách dịch vụ */
+.service-list-panel, .selected-services-panel {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.service-list-panel h2, .selected-services-panel h2 {
+    font-size: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 1rem;
+}
+
+.service-list {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.service-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.service-item:hover {
+    border-color: #9ca3af;
+    transform: translateY(-2px);
+}
+
+.service-item.selected {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.1);
+}
+
+.service-info h3 { margin: 0 0 0.25rem 0; color: #111827; }
+.service-info p { margin: 0; color: #6b7280; font-size: 0.9rem; }
+.service-price { font-weight: 600; font-size: 1.1rem; color: #16a34a; }
+
+/* Panel các dịch vụ đã chọn */
+.selected-services-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 300px;
+}
+
+.selected-list.scrollable {
+    flex-grow: 1;
+    max-height: 450px;
+    overflow-y: auto;
+    padding-right: 10px;
+    margin-right: -10px;
+}
+
+.selected-list .selected-item {
+    background-color: #f9fafb;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    border: 1px solid #e5e7eb;
+}
+
+.selected-item h4 { margin: 0 0 1rem 0; }
+.quantity-control { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.quantity-control label { font-weight: 500; color: #374151; }
+.quantity-buttons { display: flex; align-items: center; border: 1px solid #d1d5db; border-radius: 6px; }
+.quantity-buttons button { background-color: #f9fafb; border: none; width: 32px; height: 32px; font-size: 1.2rem; font-weight: 600; color: #3b82f6; cursor: pointer; transition: background-color 0.2s; }
+.quantity-buttons button:hover { background-color: #eff6ff; }
+.quantity-buttons button:first-child { border-right: 1px solid #d1d5db; border-radius: 5px 0 0 5px; }
+.quantity-buttons button:last-child { border-left: 1px solid #d1d5db; border-radius: 0 5px 5px 0; }
+.quantity-buttons span { width: 40px; text-align: center; font-weight: 600; font-size: 1rem; }
+
+.datetime-picker label { display: block; font-size: 0.9rem; margin-bottom: 0.25rem; font-weight: 500; }
+.datetime-picker input[type="datetime-local"] { width: 100%; padding: 0.5rem; border-radius: 5px; border: 1px solid #d1d5db; }
+.empty-selection { color: #6b7280; text-align: center; padding: 3rem 1rem; margin: auto; }
+
+.order-summary { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; }
+.order-note { margin-bottom: 1.5rem; }
+.order-note label { display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; }
+.order-note textarea { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.95rem; font-family: inherit; resize: vertical; transition: border-color 0.2s, box-shadow 0.2s; }
+.order-note textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25); }
+
+.total-services { margin-bottom: 1rem; }
+.btn-submit-order { width: 100%; padding: 0.8rem; font-size: 1.1rem; font-weight: 600; color: #fff; background-color: #2563eb; border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; }
+.btn-submit-order:hover:not(:disabled) { background-color: #1d4ed8; }
+.btn-submit-order:disabled { background-color: #9ca3af; cursor: not-allowed; }
+
+.error-message { color: #ef4444; font-size: 0.9rem; margin-top: 1rem; text-align: center; }
+.page-loading { text-align: center; padding: 5rem; font-size: 1.2rem; }
+
+@media (max-width: 992px) {
+    .order-layout { grid-template-columns: 1fr; }
+    .service-list, .selected-list.scrollable { max-height: 40vh; }
+}

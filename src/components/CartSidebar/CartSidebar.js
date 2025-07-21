@@ -1,5 +1,7 @@
 // src/components/CartSidebar/CartSidebar.js
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import useCart from '../../hooks/useCart';
 import './CartSidebar.css';
 
@@ -11,6 +13,37 @@ const CartSidebar = () => {
     removeFromCart, 
     totalPrice 
   } = useCart();
+
+  const { user } = useAuth(); // Lấy thông tin người dùng
+  const navigate = useNavigate(); // Hook để điều hướng
+
+const handleCheckout = () => {
+    // Đóng giỏ hàng trước khi điều hướng
+    closeCart();
+
+    if (user) {
+      // --- TRƯỜNG HỢP 1: NGƯỜI DÙNG ĐÃ ĐĂNG NHẬP ---
+      // Điều hướng thẳng đến trang Order và gửi kèm dữ liệu giỏ hàng qua state
+      navigate('/order', { 
+        state: { 
+          cartItemsFromSidebar: cartItems 
+        } 
+      });
+    } else {
+      // --- TRƯỜNG HỢP 2: NGƯỜI DÙNG CHƯA ĐĂNG NHẬP ---
+      // Điều hướng đến trang Login.
+      // Gửi kèm 2 thông tin quan trọng:
+      // 1. `from`: để sau khi login biết cần quay về đâu (`/order`).
+      // 2. `cartItemsFromSidebar`: để sau khi login, trang Order có thể nhận được dữ liệu.
+      navigate('/login', {
+        state: {
+          from: { pathname: '/order' },
+          cartItemsFromSidebar: cartItems
+        }
+      });
+    }
+  };
+
 
   return (
     <>
@@ -49,9 +82,11 @@ const CartSidebar = () => {
            <div className="cart-footer">
               <div className="cart-total">
                 <span>Tổng cộng:</span>
-                <span className="total-price">{totalPrice.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</span>
+                <span className="total-price">{totalPrice.toLocaleString('vi-VN')} VNĐ</span>
               </div>
-              <button className="btn-checkout">Tiến Hành Đặt Lịch</button>
+              <button className="btn-checkout" onClick={handleCheckout}>
+                Tiến Hành Đặt Lịch
+              </button>
            </div>
         )}
       </div>
