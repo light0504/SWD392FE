@@ -1,187 +1,109 @@
 /* src/pages/dashboard/TimeTableSchedule.css */
 
 .timetable-container {
-    overflow-x: auto; /* Cho phép cuộn ngang trên màn hình nhỏ */
+    overflow-x: auto;
     position: relative;
+    padding-top: 5px; /* Tạo không gian cho vạch chỉ báo */
 }
 
 .timetable {
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed; /* Giúp các cột có chiều rộng bằng nhau */
+    table-layout: fixed;
+    /* Định nghĩa biến CSS để tính toán vị trí */
+    --time-col-width: 80px;
+    --day-col-width: calc((100% - var(--time-col-width)) / 7);
 }
 
 .timetable th,
 .timetable td {
     border: 1px solid #e9ecef;
-    padding: 0;
+    padding: 4px;
     text-align: center;
-    height: 50px; /* Chiều cao cố định cho mỗi ô giờ */
+    height: 50px;
     vertical-align: middle;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    position: relative; /* Cần thiết cho pseudo-element ::after */
 }
 
 .timetable thead th {
     background-color: #f8f9fa;
     padding: 10px 5px;
-    position: sticky; /* Giữ header cố định khi cuộn dọc */
+    position: sticky;
     top: 0;
     z-index: 2;
+    transition: background-color 0.2s, color 0.2s;
 }
 
 .timetable .time-col {
-    width: 80px; /* Chiều rộng cố định cho cột giờ */
-    min-width: 80px;
+    width: var(--time-col-width);
+    min-width: var(--time-col-width);
     background-color: #f8f9fa;
     font-weight: 600;
-    position: sticky; /* Giữ cột giờ cố định khi cuộn ngang */
+    position: sticky;
     left: 0;
     z-index: 1;
 }
 
+/* === STYLE HIGHLIGHT NGÀY HÔM NAY === */
+.timetable th.is-today {
+    color: #007bff;
+    background-color: #e7f3ff;
+}
+
+/* Sử dụng ::after để tạo một lớp phủ màu mà không ghi đè màu trạng thái */
+.timetable td.is-today::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #e7f3ff; /* Màu nền xanh nhạt */
+    opacity: 0.4;
+    z-index: -1; /* Đặt lớp phủ nằm dưới nội dung của ô */
+}
+/* ==================================== */
+
 /* --- TÔ MÀU CÁC Ô --- */
+/* 1. Ngoài giờ làm */
+.timetable td.slot-free { background-color: #f8d7da; opacity: 0.6; }
+/* 2. Ca trống */
+.timetable td.slot-available { background-color: #d1e7dd; color: #0f5132; font-style: italic; opacity: 0.8; }
+/* 3. Đã có lịch hẹn */
+.timetable td.slot-booked { background-color: #cce5ff; vertical-align: top; padding-top: 6px; }
 
-/* Ô trống - ngoài giờ làm (mặc định) */
-.timetable td.slot-free {
-    background-color: #fcebeb; /* Màu đỏ nhạt cho ô trống */
-    opacity: 0.6;
+/* --- STYLE CHO NỘI DUNG TRONG Ô --- */
+.task-info, .available-text {
+    position: relative;
+    z-index: 1; /* Nâng nội dung lên trên lớp phủ highlight */
 }
-.timetable td.slot-free:hover {
-    background-color: #f9d8d8;
-    opacity: 1;
-}
-
-/* Ô có lịch làm việc */
-.timetable td.slot-work {
-    background-color: #d1e7dd; /* Màu xanh lá nhạt cho ca làm */
-    font-weight: 600;
-    color: #0f5132;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-.timetable td.slot-work:hover {
-    background-color: #badbcc;
-}
-
+.task-info { font-size: 0.75rem; text-align: left; padding: 0 4px; height: 100%; overflow: hidden; }
+.task-item { margin-bottom: 2px; align-items: center; display: flex; justify-content: space-between; }
+.task-service { font-weight: 600; color: #004085; }
+.task-customer { color: #383d41; }
+.available-text { font-size: 0.8rem; }
 
 /* --- THANH ĐÁNH DẤU THỜI GIAN HIỆN TẠI --- */
-/* (Đây là phần nâng cao, cần JS tính toán vị trí chính xác hơn) */
 .time-indicator {
     position: absolute;
-    width: calc(100% - 80px); /* Chiều rộng trừ đi cột giờ */
-    left: 80px; /* Vị trí bắt đầu sau cột giờ */
-    pointer-events: none; /* Cho phép click xuyên qua */
-    z-index: 3;
-}
-
-.time-indicator-line {
-    width: 100%;
     height: 2px;
-    background-color: #e44d26; /* Màu đỏ cam nổi bật */
+    background-color: #e44d26;
+    width: var(--day-col-width);
+    z-index: 3;
+    pointer-events: none;
+    left: calc(var(--time-col-width) + var(--day-col-width) * var(--current-day-index));
+    transition: left 0.5s ease-out, top 0.5s ease-out;
 }
 
 .time-indicator-dot {
     position: absolute;
-    top: -4px; /* Dịch lên trên 1 chút so với đường kẻ */
-    left: -6px; /* Dịch sang trái 1 chút */
+    top: -5px;
+    left: -6px;
     width: 12px;
     height: 12px;
     background-color: #e44d26;
     border-radius: 50%;
     border: 2px solid white;
-}
-
-.manager-timetable td {
-    position: relative; /* Cần thiết cho tooltip */
-    cursor: default; /* Con trỏ mặc định */
-}
-
-/* Ô trống - không có nhân viên */
-.manager-timetable .slot-empty {
-    background-color: #fee2e2; /* Màu đỏ nhạt */
-    opacity: 0.7;
-}
-
-/* Ô có nhân viên */
-.manager-timetable .slot-occupied {
-    background-color: #dbeafe; /* Màu xanh dương nhạt */
-    font-weight: 600;
-    color: #1e40af;
-    transition: background-color 0.2s;
-}
-
-.manager-timetable .slot-occupied:hover {
-    background-color: #bfdbfe; /* Đậm hơn khi hover */
-}
-
-.slot-content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    width: 100%;
-}
-
-.staff-count {
-    padding: 4px 8px;
-    background-color: rgba(255, 255, 255, 0.5);
-    border-radius: 4px;
-    font-size: 0.9rem;
-}
-
-
-/* --- TOOLTIP HIỂN THỊ DANH SÁCH NHÂN VIÊN --- */
-
-/* Ẩn tooltip mặc định */
-.slot-content .tooltip {
-    visibility: hidden;
-    opacity: 0;
-    position: absolute;
-    bottom: 100%; /* Hiển thị phía trên ô */
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #333;
-    color: #fff;
-    padding: 10px 15px;
-    border-radius: 6px;
-    z-index: 10;
-    width: max-content; /* Chiều rộng tự động theo nội dung */
-    min-width: 150px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    transition: opacity 0.2s, visibility 0.2s;
-    margin-bottom: 8px; /* Khoảng cách với ô */
-}
-
-/* Hiển thị tooltip khi hover vào ô */
-.manager-timetable .slot-occupied:hover .tooltip {
-    visibility: visible;
-    opacity: 1;
-}
-
-/* Mũi tên của tooltip (tạo bằng pseudo-element) */
-.slot-content .tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
-    border-style: solid;
-    border-color: #333 transparent transparent transparent;
-}
-
-.tooltip ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    text-align: left;
-}
-
-.tooltip ul li {
-    padding: 4px 0;
-    border-bottom: 1px solid #555;
-}
-
-.tooltip ul li:last-child {
-    border-bottom: none;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
 }

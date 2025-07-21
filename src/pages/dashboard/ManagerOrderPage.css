@@ -1,0 +1,144 @@
+/* src/pages/dashboard/ManagerOrderPage.css */
+
+/* === BỘ LỌC VÀ TÌM KIẾM === */
+.page-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.time-filter-group {
+    display: flex;
+    gap: 0.5rem;
+    background-color: #f1f3f5;
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.time-filter-group button {
+    padding: 0.5rem 1rem;
+    border: none;
+    background-color: transparent;
+    border-radius: 6px;
+    font-weight: 500;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.time-filter-group button.active {
+    background-color: #fff;
+    color: #007bff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.search-container {
+    flex-grow: 1;
+    max-width: 400px;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+.filter-tabs {
+    display: flex; flex-wrap: wrap; gap: 0.5rem;
+    border-bottom: 2px solid #e5e7eb; margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+}
+.filter-tabs button {
+    padding: 0.5rem 1rem; border: 1px solid #dee2e6; background-color: #fff;
+    border-radius: 20px; font-weight: 500; color: #495057; cursor: pointer;
+    transition: all 0.2s;
+}
+.filter-tabs button:hover { background-color: #f1f3f5; }
+.filter-tabs button.active { background-color: #007bff; color: #fff; border-color: #007bff; }
+
+/* === KHUNG CHỨA BẢNG === */
+.order-table-container {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* === HEADER VÀ CÁC HÀNG CỦA BẢNG (DÙNG CSS GRID) === */
+.order-table-header,
+.order-row-main {
+    display: grid;
+    grid-template-columns: 1.2fr 2.5fr 2fr 1.5fr 1.5fr 0.5fr;
+    align-items: center;
+    padding: 12px 15px;
+    gap: 1rem;
+}
+.order-table-header {
+    background-color: #f8f9fa; font-weight: 600; font-size: 0.85rem;
+    text-transform: uppercase; color: #495057; border-bottom: 1px solid #dee2e6;
+}
+.order-row-group { border-bottom: 1px solid #dee2e6; }
+.order-row-group:last-child { border-bottom: none; }
+.order-row-main { background-color: #fff; cursor: pointer; transition: background-color 0.2s; }
+.order-row-main:hover { background-color: #f1f3f5; }
+
+/* === CÁC Ô TRONG BẢNG === */
+.cell { padding: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.order-id { font-family: 'Courier New', Courier, monospace; font-weight: 600; }
+.order-status { text-align: center; }
+.order-total { text-align: right; color: #28a745; font-weight: bold; }
+.expand-icon { text-align: center; }
+
+/* === PHẦN CHI TIẾT KHI MỞ RỘNG === */
+.order-row-details {
+    padding: 1rem 2rem 1.5rem 2rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    animation: fadeIn 0.3s ease-in-out;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+.order-row-details h4 { margin-top: 0; margin-bottom: 1rem; color: #343a40; }
+.details-list { list-style-type: none; padding-left: 0; margin: 0; }
+.detail-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.75rem 0; border-bottom: 1px dotted #ced4da;
+}
+.details-list .detail-item:last-child { border-bottom: none; }
+.detail-item-info { display: flex; flex-direction: column; gap: 0.25rem; }
+.detail-item-info strong { font-weight: 600; color: #212529; }
+.detail-item-info span { font-size: 0.9rem; color: #6c757d; }
+.detail-item-status { flex-shrink: 0; margin-left: 1rem; }
+
+/* === CÁC STYLE KHÁC === */
+.empty-message, .error-message { text-align: center; padding: 2rem; color: #6c757d; }
+
+/* === RESPONSIVE === */
+@media (max-width: 992px) {
+    .order-table-header { display: none; }
+    .page-controls { flex-direction: column; align-items: stretch; }
+    .search-container { max-width: 100%; }
+    .order-row-main {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        padding: 1rem;
+    }
+    .cell {
+        display: flex; width: 100%; justify-content: space-between;
+        padding: 0.5rem 0; border-bottom: 1px dotted #e9ecef;
+        text-align: right; white-space: normal;
+    }
+    .order-row-main .cell:last-child { border-bottom: none; }
+    .cell::before {
+        content: attr(data-label); font-weight: 600;
+        margin-right: 1rem; text-align: left; color: #495057;
+    }
+    .order-status, .order-total { justify-content: flex-end; }
+    .expand-icon { justify-content: center; margin-top: 0.5rem; }
+    .expand-icon::before { display: none; }
+}

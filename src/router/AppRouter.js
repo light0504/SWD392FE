@@ -22,6 +22,8 @@ import RevenueReportPage from '../pages/dashboard/RevenueReportPage';
 import ServiceManagementPage from '../pages/dashboard/ServiceManagement';
 import AccessDeniedPage from '../pages/dashboard/AccessDeniedPage';
 import StaffManagement from '../pages/dashboard/StaffManagement';
+import ManagerOrderPage from '../pages/dashboard/ManagerOrderPage';
+import StaffWorklogPage from '../pages/dashboard/StaffWorklogPage';
 
 // Auth Components
 import ProtectedRoute from './ProtectedRoute';
@@ -64,6 +66,10 @@ const AppRouter = () => {
             </ProtectedRoute>
           } 
         />
+        <Route 
+          path="my-worklog"
+          element={ <ProtectedRoute allowedRoles={['STAFF']}><StaffWorklogPage /></ProtectedRoute> }
+        />
         {/* Manager sẽ truy cập /dashboard/schedule-management */}
         <Route 
           path="schedule-management" 
@@ -94,6 +100,14 @@ const AppRouter = () => {
                     <RevenueReportPage />
                 </ProtectedRoute>
             } 
+        />
+        <Route
+          path="orders"
+          element={
+            <ProtectedRoute allowedRoles={['MANAGER']}>
+              <ManagerOrderPage />
+            </ProtectedRoute>
+          }
         />
       </Route>
       
