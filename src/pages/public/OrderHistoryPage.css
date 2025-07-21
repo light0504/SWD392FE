@@ -17,7 +17,7 @@
     transition: color 0.2s, border-color 0.2s;
 }
 .filter-tabs button:hover { color: #1f2937; }
-.filter-tabs button.active { color: #007bff; border-bottom-color: #007bff; }
+.filter-tabs button.active { color: black; border-bottom-color: #007bff; }
 
 .order-list { display: flex; flex-direction: column; gap: 1.5rem; }
 .order-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
@@ -47,7 +47,7 @@
 }
 /* ============================================== */
 
-.btn-rate { background-color: #f9c74f; color: #212529; border: none; border-radius: 5px; padding: 5px 10px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+.btn-rate { background-color: #f9c74f; color: #212529; border: none; border-radius: 5px; padding: 5px 10px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; margin-right: 5px;}
 .btn-rate:hover { background-color: #f3b71c; }
 .rated-stars { font-weight: bold; color: #f9c74f; font-size: 1.1rem; }
 
@@ -57,8 +57,16 @@
 .empty-message, .error-message { text-align: center; padding: 3rem; color: #6c757d; }
 .error-message { color: #dc3545; }
 
-.status-badge { padding: 5px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; color: #fff; text-transform: capitalize; }
-.status-badge.status-completed { background-color: #28a745; }
+.status-badge {
+    padding: 5px 10px; border-radius: 12px; font-size: 0.8rem;
+    font-weight: 600; color: #fff; text-transform: capitalize;
+}
+/* Trạng thái Order */
 .status-badge.status-pending { background-color: #ffc107; color: #212529; }
+.status-badge.status-processing { background-color: #6c757d; }
+.status-badge.status-done { background-color: #198754; }
 .status-badge.status-cancelled { background-color: #dc3545; }
-.status-badge.status-processing { background-color: #0dcaf0; }
+/* Trạng thái OrderDetail */
+.status-badge.status-confirmed { background-color: #0d6efd; }
+.status-badge.status-in-progress { background-color: #6610f2; }
+.status-badge.status-completed { background-color: #28a745; }
