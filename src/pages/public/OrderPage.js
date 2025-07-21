@@ -119,12 +119,12 @@ const OrderPage = () => {
             customerId: user.id,
             orderDate: new Date().toISOString(),
             services: selectedServices.flatMap(service =>
-        Array.from({ length: service.quantity }, () => ({
-            serviceId: service.id,
-            // Thêm 'Z' vào cuối chuỗi để nói với JS rằng đây là giờ UTC
-            scheduledTime: `${service.scheduledTime}:00.000Z`, // <--- SỬA LẠI THÀNH DÒNG NÀY
-        }))
-    ),
+                Array.from({ length: service.quantity }, () => ({
+                    serviceId: service.id,
+                    // Gửi đi chuỗi thời gian địa phương, không chuyển đổi
+                    scheduledTime: service.scheduledTime,
+                }))
+            ),
             note: orderNote,
         };
 
@@ -143,8 +143,8 @@ const OrderPage = () => {
         }
     };
 
-    // === RENDER ===
     if (loading) return <div className="page-loading">Đang tải danh sách dịch vụ...</div>;
+
 
     return (
         <div className="order-page">
@@ -192,13 +192,16 @@ const OrderPage = () => {
                                             </div>
                                         </div>
                                         <div className="datetime-picker">
-                                            <label htmlFor={`datetime-${service.id}`}>Chọn ngày & giờ:</label>
+                                            <label htmlFor={`datetime-${service.id}`}>Chọn ngày & giờ (mốc 15 phút):</label>
                                             <input
                                                 type="datetime-local"
                                                 id={`datetime-${service.id}`}
                                                 value={service.scheduledTime}
                                                 onChange={(e) => handleDateTimeChange(service.id, e.target.value)}
                                                 min={minDateTime}
+                                                // --- THAY ĐỔI: Thêm thuộc tính step ---
+                                                // 900 giây = 15 phút
+                                                step="900" 
                                             />
                                         </div>
                                     </div>

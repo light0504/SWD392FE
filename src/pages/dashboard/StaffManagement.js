@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getAllStaff, createStaff, updateStaff, deleteStaff, getStaffByFilter } from "../../api/StaffManagementAPI";
+import { getAllStaff, createStaff, updateStaff, deleteStaff, getStaffByFilter } from "../../api/staffapi";
 import "./StaffManagement.css";
 
 const formatCurrency = (value) => {

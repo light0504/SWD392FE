@@ -103,14 +103,6 @@ const ManagerSchedulePage = () => {
                                             {staffCount > 0 && (
                                                 <div className="slot-content">
                                                     <span className="staff-count">{staffCount} NV</span>
-                                                    {/* Tooltip sẽ được tạo bằng CSS */}
-                                                    <div className="tooltip">
-                                                        <ul>
-                                                            {staffInSlot.map((name, index) => (
-                                                                <li key={index}>{name}</li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
                                                 </div>
                                             )}
                                         </td>
