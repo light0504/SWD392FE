@@ -1,0 +1,40 @@
+.order-history-page {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.order-history-page h2 {
+  margin-bottom: 24px;
+  font-size: 2rem;
+  color: #333;
+}
+
+.order-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.order-history-table th, .order-history-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.order-history-table th {
+  background: #f5f5f5;
+  color: #222;
+}
+
+.order-history-table tr:last-child td {
+  border-bottom: none;
+}
+
+.order-history-page p {
+  color: #666;
+  font-size: 1.1rem;
+}

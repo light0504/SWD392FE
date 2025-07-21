@@ -10,6 +10,7 @@ import HomePage from '../pages/public/HomePage';
 import ServicesPage from '../pages/public/ServicesPage';
 import LoginPage from '../pages/public/LoginPage';
 import RegisterPage from '../pages/public/RegisterPage';
+import ProfilePage from '../pages/public/ProfilePage';
 
 // Dashboard Pages
 import DashboardHomePage from '../pages/dashboard/DashboardHomePage';
@@ -32,6 +33,7 @@ const AppRouter = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/services" element={<ServicesPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
 
 
          {/* ======================= NOT FOUND ======================= */}
