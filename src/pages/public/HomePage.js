@@ -6,7 +6,7 @@ const HomePage = () => {
   return (
     <>
       <Hero />
-      <Services />
+      <Services isFeatured={true} /> 
     </>
   );
 };

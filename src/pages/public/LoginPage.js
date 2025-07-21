@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // <-- 1. Import useEffect
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import './LoginPage.css';
 
 const LoginPage = () => {
-  const { login } = useAuth();
+  const { user, login } = useAuth(); // <-- 2. Lấy `user` từ context
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -14,16 +14,27 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Lấy state từ trang trước để xử lý điều hướng và chuyển tiếp dữ liệu
+  // Lấy state từ trang trước
   const fromPath = location.state?.from?.pathname || null;
   const cartItemsFromPrevPage = location.state?.cartItemsFromSidebar || null;
   const successMessage = location.state?.message;
 
+  // --- 3. THÊM LOGIC KIỂM TRA VÀ CHUYỂN HƯỚNG ---
+  useEffect(() => {
+    // Nếu có thông tin người dùng (tức là đã đăng nhập)
+    if (user) {
+      // Chuyển hướng về trang chủ hoặc trang dashboard nếu họ là nhân viên
+      const redirectPath = getRedirectPathBasedOnRole(user.roles);
+      navigate(redirectPath, { replace: true });
+    }
+  }, [user, navigate]); // Effect này sẽ chạy khi `user` hoặc `navigate` thay đổi
+
+
   const getRedirectPathBasedOnRole = (roles) => {
-    if (roles.some(role => ['MANAGER', 'STAFF'].includes(role))) {
+    if (roles && roles.some(role => ['MANAGER', 'STAFF'].includes(role))) {
       return '/dashboard';
     }
-    return '/'; // Mặc định cho USER
+    return '/'; // Mặc định cho USER hoặc khi không có roles
   };
 
   const handleSubmit = async (e) => {
@@ -32,15 +43,14 @@ const LoginPage = () => {
     setError(null);
 
     try {
-      const response = await login(email, password); // Gọi hàm login từ AuthContext
-
-      if (response.isSuccess) {
-        // Ưu tiên chuyển hướng về trang người dùng muốn vào trước đó (ví dụ: /order)
+      const response = await login(email, password);
+      
+      // Chú ý: Cần kiểm tra 'isSuccess' thay vì 'success' để khớp với các file trước
+      if (response && response.isSuccess) { 
         const redirectTo = fromPath || getRedirectPathBasedOnRole(response.data.roles);
 
-        // Khi điều hướng, "mang theo" (chuyển tiếp) dữ liệu giỏ hàng đã nhận được
         navigate(redirectTo, { 
-          replace: true, // Thay thế trang login trong lịch sử trình duyệt
+          replace: true,
           state: {
             cartItemsFromSidebar: cartItemsFromPrevPage
           }
@@ -54,6 +64,12 @@ const LoginPage = () => {
       setIsLoading(false);
     }
   };
+
+  // --- 4. TRÁNH RENDER FORM NẾU ĐÃ ĐĂNG NHẬP VÀ ĐANG CHUẨN BỊ CHUYỂN HƯỚNG ---
+  // Điều này ngăn form nhấp nháy trên màn hình trước khi chuyển hướng
+  if (user) {
+    return null; // hoặc một spinner loading: <div className="page-loading">Đang chuyển hướng...</div>
+  }
 
   return (
     <div className="login-container">

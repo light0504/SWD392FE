@@ -58,6 +58,7 @@ const RegisterPage = () => {
     } else if (!/^\d{9,15}$/.test(formData.phoneNumber)) {
       newErrors.phoneNumber = 'Số điện thoại không hợp lệ.';
     }
+    if (!formData.address) newErrors.address = 'Địa chỉ không được để trống.';
     return newErrors;
   };
 
@@ -141,8 +142,9 @@ const RegisterPage = () => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="address">Địa chỉ (Không bắt buộc)</label>
+          <label htmlFor="address">Địa chỉ</label>
           <input type="text" id="address" name="address" value={formData.address} onChange={handleChange} />
+          {errors.address && <span className="error-text">{errors.address}</span>}
         </div>
 
         <div className="form-group">
