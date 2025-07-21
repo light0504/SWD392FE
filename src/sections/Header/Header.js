@@ -127,10 +127,6 @@ const Header = () => {
                   Quản lý
                 </Link>
               )}
-              
-              <button onClick={handleLogout} className="btn btn-outline">
-                Đăng xuất
-              </button>
             </>
           ) : (
             // ============================================
