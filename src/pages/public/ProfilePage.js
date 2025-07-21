@@ -1,121 +1,206 @@
 import React, { useState, useEffect } from 'react';
 import './ProfilePage.css';
 import { useAuth } from '../../hooks/useAuth';
+import { updateUserProfile } from '../../api/authAPI';
 
 export default function ProfilePage() {
-  const { user } = useAuth();
-  // Profile state
-  const [profile, setProfile] = useState({
-    name: '',
-    email: '',
-    phone: '',
+  const { user, setUser } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+    gender: '',
+    address: '',
+    imgURL: ''
   });
-  
-  const [editing, setEditing] = useState(false);
-  const [membershipStatus, setMembershipStatus] = useState('None');
-  const [review, setReview] = useState('');
-  const [message, setMessage] = useState('');
+  const [changedFields, setChangedFields] = useState({});
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (user) {
-      setProfile({
-        name: user.firstName || user.lastName || '',
-        email: user.email || '',
-        phone: user.phoneNumber || '',
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        phoneNumber: user.phoneNumber || '',
+        gender: user.gender || '',
+        address: user.address || '',
+        imgURL: user.imgURL || ''
       });
-      // If user has order history, set it here. Example:
-      // setOrderHistory(user.orders || []); // This line is removed
-    } else {
-      // setOrderHistory([]); // This line is removed
     }
-    // Fetch membership status (placeholder)
-    setMembershipStatus('Active');
   }, [user]);
 
-  const handleProfileChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setProfile((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Only track field if it's different from original value
+    if (value !== user[name]) {
+      setChangedFields(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    } else {
+      // Remove field if it's back to original value
+      setChangedFields(prev => {
+        const newFields = { ...prev };
+        delete newFields[name];
+        return newFields;
+      });
+    }
   };
 
-  const handleProfileSave = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Placeholder for API call to update profile
-    setEditing(false);
-    setMessage('Profile updated successfully!');
-    setTimeout(() => setMessage(''), 2000);
+    setError('');
+    setSuccess('');
+    
+    // Only proceed if there are changes
+    if (Object.keys(changedFields).length === 0) {
+      setIsEditing(false);
+      return;
+    }
+    
+    try {
+      const response = await updateUserProfile(changedFields);
+      if (response) {
+        setUser({ ...user, ...changedFields });
+        setSuccess('Profile updated successfully!');
+        setIsEditing(false);
+        setChangedFields({}); // Reset changed fields
+      }
+    } catch (err) {
+      setError('Failed to update profile. Please try again.');
+      console.error('Update error:', err);
+    }
   };
 
-  const handleBuyMembership = () => {
-    // Placeholder for API call
-    setMembershipStatus('Active');
-    setMessage('Membership purchased!');
-    setTimeout(() => setMessage(''), 2000);
-  };
-
-  const handleReviewSubmit = (e) => {
-    e.preventDefault();
-    // Placeholder for API call
-    setReview('');
-    setMessage('Thank you for your review!');
-    setTimeout(() => setMessage(''), 2000);
+  const handleCancel = () => {
+    setFormData({
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      phoneNumber: user?.phoneNumber || '',
+      gender: user?.gender || '',
+      address: user?.address || '',
+      imgURL: user?.imgURL || ''
+    });
+    setChangedFields({});
+    setIsEditing(false);
+    setError('');
   };
 
   return (
-    <div className="profile-page">
-      <h1 style={{ marginTop: '32px' }}>My Profile</h1>
-      {message && <div className="profile-message">{message}</div>}
-      {/* Profile Info Section */}
-      <section className="profile-section">
-        <h2>Account Information</h2>
-        {editing ? (
-          <form onSubmit={handleProfileSave} className="profile-form">
-            <label>
-              Name:
-              <input name="name" value={profile.name} onChange={handleProfileChange} required />
-            </label>
-            <label>
-              Email:
-              <input name="email" value={profile.email} onChange={handleProfileChange} required type="email" />
-            </label>
-            <label>
-              Phone:
-              <input name="phone" value={profile.phoneNumber} onChange={handleProfileChange} required />
-            </label>
-            <button type="submit">Save</button>
-            <button type="button" onClick={() => setEditing(false)}>Cancel</button>
+    <div className="profile-container">
+      <div className="profile-card">
+        <h2>My profile</h2>
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
+        
+        {isEditing ? (
+          <form onSubmit={handleSubmit} className="profile-form">
+            <div className="profile-field">
+              <label>First Name</label>
+              <input
+                type="text"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="profile-field">
+              <label>Last Name</label>
+              <input
+                type="text"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="profile-field">
+              <label>Phone</label>
+              <input
+                type="tel"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="profile-field">
+              <label>Gender</label>
+              <select 
+                name="gender" 
+                value={formData.gender} 
+                onChange={handleChange}
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="profile-field">
+              <label>Address</label>
+              <input
+                type="text"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="profile-field">
+              <label>Profile Image URL</label>
+              <input
+                type="url"
+                name="imgURL"
+                value={formData.imgURL}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-buttons">
+              <button 
+                type="submit" 
+                className="save-button"
+                disabled={Object.keys(changedFields).length === 0}
+              >
+                Save
+              </button>
+              <button type="button" className="cancel-button" onClick={handleCancel}>
+                Cancel
+              </button>
+            </div>
           </form>
         ) : (
           <div className="profile-info">
-            <div><strong>Name:</strong> {profile.name}</div>
-            <div><strong>Email:</strong> {profile.email}</div>
-            <div><strong>Phone:</strong> {profile.phone}</div>
-            <button onClick={() => setEditing(true)}>Edit</button>
+            <div className="profile-field">
+              <label>Name</label>
+              <p>{user?.firstName} {user?.lastName}</p>
+            </div>
+            <div className="profile-field">
+              <label>Email</label>
+              <p>{user?.email}</p>
+            </div>
+            <div className="profile-field">
+              <label>Phone</label>
+              <p>{user?.phoneNumber || 'Not specified'}</p>
+            </div>
+            <div className="profile-field">
+              <label>Gender</label>
+              <p>{user?.gender || 'Not specified'}</p>
+            </div>
+            <div className="profile-field">
+              <label>Address</label>
+              <p>{user?.address || 'Not specified'}</p>
+            </div>
+            <button className="edit-button" onClick={() => setIsEditing(true)}>
+              Edit
+            </button>
           </div>
         )}
-      </section>
-
-      {/* Membership Section */}
-      <section className="profile-section">
-        <h2>Membership</h2>
-        <div>Status: <strong>{membershipStatus}</strong></div>
-        {membershipStatus !== 'Active' && (
-          <button onClick={handleBuyMembership}>Buy Membership</button>
-        )}
-      </section>
-
-      {/* Review Service Section */}
-      <section className="profile-section">
-        <h2>Review Service</h2>
-        <form onSubmit={handleReviewSubmit} className="review-form">
-          <textarea
-            value={review}
-            onChange={(e) => setReview(e.target.value)}
-            placeholder="Write your review here..."
-            required
-          />
-          <button type="submit">Submit Review</button>
-        </form>
-      </section>
+      </div>
     </div>
   );
 }
