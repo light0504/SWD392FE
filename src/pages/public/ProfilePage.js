@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import './ProfilePage.css';
-import { useAuth } from '../../hooks/useAuth';
-import { updateUserProfile } from '../../api/authAPI';
+import { getCustomerProfile, updateUserProfile } from '../../api/authAPI';
+
+const genderMap = {
+  0: 'Nam',
+  1: 'Nữ',
+  2: 'Other',
+  'MALE': 0,
+  'FEMALE': 1,
+  'OTHER': 2
+};
 
 export default function ProfilePage() {
-  const { user, setUser } = useAuth();
+  const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -17,35 +25,47 @@ export default function ProfilePage() {
   const [changedFields, setChangedFields] = useState({});
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await getCustomerProfile();
+      const profile = response.data || {};
+      setUser(profile);
+      setFormData({
+        firstName: profile.firstName || '',
+        lastName: profile.lastName || '',
+        phone: profile.phone || '',
+        gender: profile.gender || '',
+        address: profile.address || '',
+        imgURL: profile.imgURL || ''
+      });
+    } catch (err) {
+      setError('Could not fetch user profile.');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (user) {
-      setFormData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        phoneNumber: user.phoneNumber || '',
-        gender: user.gender || '',
-        address: user.address || '',
-        imgURL: user.imgURL || ''
-      });
-    }
-  }, [user]);
+    fetchUserProfile();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let val = value;
+    if (name === 'gender') val = Number(value);
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: val
     }));
-    
-    // Only track field if it's different from original value
-    if (value !== user[name]) {
+    if (user && val !== user[name]) {
       setChangedFields(prev => ({
         ...prev,
-        [name]: value
+        [name]: val
       }));
     } else {
-      // Remove field if it's back to original value
       setChangedFields(prev => {
         const newFields = { ...prev };
         delete newFields[name];
@@ -58,40 +78,44 @@ export default function ProfilePage() {
     e.preventDefault();
     setError('');
     setSuccess('');
-    
-    // Only proceed if there are changes
     if (Object.keys(changedFields).length === 0) {
       setIsEditing(false);
       return;
     }
-    
     try {
       const response = await updateUserProfile(changedFields);
-      if (response) {
-        setUser({ ...user, ...changedFields });
+      if (response && response.isSuccess) {
+        await fetchUserProfile();
         setSuccess('Profile updated successfully!');
         setIsEditing(false);
-        setChangedFields({}); // Reset changed fields
+        setChangedFields({});
+      } else {
+        setError(response.message || 'Failed to update profile.');
       }
     } catch (err) {
       setError('Failed to update profile. Please try again.');
-      console.error('Update error:', err);
     }
   };
 
   const handleCancel = () => {
-    setFormData({
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      phoneNumber: user?.phoneNumber || '',
-      gender: user?.gender || '',
-      address: user?.address || '',
-      imgURL: user?.imgURL || ''
-    });
+    if (user) {
+      setFormData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        phoneNumber: user.phone || '',
+        gender: typeof user.gender === 'number' ? user.gender : (genderMap[user.gender] ?? ''),
+        address: user.address || '',
+        imgURL: user.imgURL || ''
+      });
+    }
     setChangedFields({});
     setIsEditing(false);
     setError('');
   };
+
+  if (loading) {
+    return <div className="profile-container"><h2>Loading profile...</h2></div>;
+  }
 
   return (
     <div className="profile-container">
@@ -99,7 +123,6 @@ export default function ProfilePage() {
         <h2>My profile</h2>
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
-        
         {isEditing ? (
           <form onSubmit={handleSubmit} className="profile-form">
             <div className="profile-field">
@@ -125,21 +148,21 @@ export default function ProfilePage() {
               <input
                 type="tel"
                 name="phoneNumber"
-                value={formData.phoneNumber}
+                value={formData.phone}
                 onChange={handleChange}
               />
             </div>
             <div className="profile-field">
               <label>Gender</label>
-              <select 
-                name="gender" 
-                value={formData.gender} 
+              <select
+                name="gender"
+                value={formData.gender}
                 onChange={handleChange}
               >
                 <option value="">Select gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
+                <option value={0}>Nam</option>
+                <option value={1}>Nữ</option>
+                <option value={2}>Other</option>
               </select>
             </div>
             <div className="profile-field">
@@ -161,8 +184,8 @@ export default function ProfilePage() {
               />
             </div>
             <div className="form-buttons">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="save-button"
                 disabled={Object.keys(changedFields).length === 0}
               >
@@ -185,11 +208,11 @@ export default function ProfilePage() {
             </div>
             <div className="profile-field">
               <label>Phone</label>
-              <p>{user?.phoneNumber || 'Not specified'}</p>
+              <p>{user?.phone || 'Not specified'}</p>
             </div>
             <div className="profile-field">
               <label>Gender</label>
-              <p>{user?.gender || 'Not specified'}</p>
+              <p>{typeof user?.gender === 'number' ? genderMap[user.gender] : user?.gender || 'Not specified'}</p>
             </div>
             <div className="profile-field">
               <label>Address</label>

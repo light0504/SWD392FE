@@ -2,9 +2,10 @@ import apiClient from './api';
 
 /**
  * Fetch the order history for the current user.
+ * @param {string} customerId - ID của khách hàng.
  * @returns {Promise<Array>} Array of order objects
  */
-const getOrderHistory = async () => {
+const getOrderHistory = async (customerId) => {
   try {
     const response = await apiClient.get(`/Order/customer/${customerId}`);
     return response.data;
