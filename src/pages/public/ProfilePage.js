@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './ProfilePage.css';
 import { getCustomerProfile, updateUserProfile } from '../../api/authAPI';
+import axios from 'axios';
 
 const genderMap = {
   0: 'Nam',
@@ -26,6 +27,8 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
+  const [memberships, setMemberships] = useState([]);
+  const [loadingMemberships, setLoadingMemberships] = useState(true);
 
   const fetchUserProfile = async () => {
     try {
@@ -48,9 +51,34 @@ export default function ProfilePage() {
     }
   };
 
+  const fetchMembershipByCustomer = async (customerId) => {
+    setLoadingMemberships(true);
+    try {
+      const res = await axios.get(`/api/CustomerMembership/by-customer/${customerId}`);
+      if (res.data && res.data.isSuccess && Array.isArray(res.data.data)) {
+        setMemberships(res.data.data);
+      } else {
+        setMemberships([]);
+      }
+    } catch (err) {
+      setMemberships([]);
+    } finally {
+      setLoadingMemberships(false);
+    }
+  };
+
   useEffect(() => {
-    fetchUserProfile();
+    const fetchAll = async () => {
+      await fetchUserProfile();
+    };
+    fetchAll();
   }, []);
+
+  useEffect(() => {
+    if (user && user.id) {
+      fetchMembershipByCustomer(user.id);
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -124,6 +152,25 @@ export default function ProfilePage() {
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
         <div className="profile-content">
+          <div className="profile-left">
+            <div className="profile-image">
+              <img
+                src={user?.imgURL || '/default-profile.png'}
+                alt="Profile"
+                className="user-profile-img"
+              />
+            </div>
+            <div className="memberships-section">
+              <h3 className="memberships-title">Gói thành viên</h3>
+              {loadingMemberships ? (
+                <div>Đang tải...</div>
+              ) : (
+                <div className="current-membership">
+                   {memberships[0]?.name || 'Chưa có'}
+                </div>
+              )}
+            </div>
+          </div>
           <div className="profile-info">
             {isEditing ? (
               <form onSubmit={handleSubmit} className="profile-form">
@@ -150,7 +197,7 @@ export default function ProfilePage() {
                   <input
                     type="tel"
                     name="phoneNumber"
-                    value={formData.phone}
+                    value={formData.phoneNumber}
                     onChange={handleChange}
                   />
                 </div>
@@ -202,36 +249,29 @@ export default function ProfilePage() {
               <>
                 <div className="profile-field">
                   <label>Họ và Tên</label>
-                  <p>{user?.firstName} {user?.lastName}</p>
+                  <div className="profile-view-box">{user?.firstName} {user?.lastName}</div>
                 </div>
                 <div className="profile-field">
                   <label>Email</label>
-                  <p>{user?.email}</p>
+                  <div className="profile-view-box">{user?.email}</div>
                 </div>
                 <div className="profile-field">
                   <label>Số điện thoại</label>
-                  <p>{user?.phone || 'Not specified'}</p>
+                  <div className="profile-view-box">{user?.phone || 'Not specified'}</div>
                 </div>
                 <div className="profile-field">
                   <label>Giới tính</label>
-                  <p>{typeof user?.gender === 'number' ? genderMap[user.gender] : user?.gender || 'Not specified'}</p>
+                  <div className="profile-view-box">{typeof user?.gender === 'number' ? genderMap[user.gender] : user?.gender || 'Not specified'}</div>
                 </div>
                 <div className="profile-field">
                   <label>Địa chỉ</label>
-                  <p>{user?.address || 'Not specified'}</p>
+                  <div className="profile-view-box">{user?.address || 'Not specified'}</div>
                 </div>
                 <button className="edit-button" onClick={() => setIsEditing(true)}>
                   Sửa
                 </button>
               </>
             )}
-          </div>
-          <div className="profile-image">
-            <img
-              src={user?.imgURL || '/default-profile.png'}
-              alt="Profile"
-              className="user-profile-img"
-            />
           </div>
         </div>
       </div>

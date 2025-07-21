@@ -23,7 +23,15 @@
 .profile-content {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
+}
+
+.profile-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 40px;
+  width: 300px;
 }
 
 .profile-info {
@@ -31,13 +39,13 @@
 }
 
 .profile-image {
-  margin-left: 32px;
+  margin-right: 40px;
+  margin-left: 0;
   display: flex;
   align-items: center;
 }
 
 .user-profile-img {
-  margin-right: 70px;
   width: 250px;
   height: 250px;
   object-fit: cover;
@@ -92,48 +100,53 @@
   margin-top: 8px;
 }
 
-.edit-button,
-.save-button {
-  background: #FF6B6B;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 24px;
+.edit-button, .save-button, .cancel-button {
   font-size: 16px;
-  font-weight: 500;
+  padding: 12px 32px;
+  border: none;
+  border-radius: 24px;
+  margin-top: 24px;
+  margin-right: 16px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.edit-button {
+  background: linear-gradient(90deg, #f59e42 0%, #fabd7b 100%);
+  color: #fff;
+  font-weight: bold;
+}
+.edit-button:hover {
+  background: linear-gradient(90deg, #f68308 0%, #f6ab5b 100%);
+  box-shadow: 0 4px 16px rgba(255,117,140,0.15);
+}
+
+.save-button {
+  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  color: #fff;
+  font-weight: bold;
+}
+.save-button:disabled {
+  background: #bdbdbd;
+  color: #fff;
+  cursor: not-allowed;
+}
+.save-button:hover:enabled {
+  background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
+  box-shadow: 0 4px 16px rgba(67,233,123,0.15);
 }
 
 .cancel-button {
-  background: #f5f5f5;
-  color: #666;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 24px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
+  background: #fff;
+  color: #ff758c;
+  border: 2px solid #ff758c;
+  font-weight: bold;
 }
-
-.edit-button:hover,
-.save-button:hover {
-  background: #FF5252;
-}
-
 .cancel-button:hover {
-  background: #e5e5e5;
-}
-
-.save-button:disabled {
-  background: #ffb3b3;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.save-button:disabled:hover {
-  background: #ffb3b3;
+  background: #ffebef;
+  color: #ff3b6a;
+  border-color: #ff3b6a;
 }
 
 .error-message,
@@ -173,4 +186,137 @@
 .profile-status span:last-child {
   font-size: 14px;
   color: #666;
+}
+
+.memberships-section {
+  margin-top: 32px;
+  width: 250px;
+}
+
+.memberships-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.memberships-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.membership-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #f0f0f0;
+}
+
+.membership-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f9f9f9;
+  border: 1px solid #eee;
+}
+
+.membership-info {
+  flex: 1;
+}
+
+.membership-name {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.membership-price {
+  color: #f59e42;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.membership-desc {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.membership-discount {
+  font-size: 13px;
+  color: #43e97b;
+  margin-bottom: 2px;
+}
+
+.membership-duration {
+  font-size: 13px;
+  color: #888;
+}
+
+.current-membership {
+  font-size: 16px;
+  font-weight: bold;
+  color: #f59e42;
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* --- Nhỏ gọn input/select trong form profile --- */
+.profile-form .profile-field input,
+.profile-form .profile-field select {
+  padding: 4px 8px;
+  font-size: 14px;
+  border-radius: 4px;
+  height: 32px;
+  min-height: 32px;
+  max-width: 320px;
+  box-sizing: border-box;
+}
+
+.profile-form .profile-field label {
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.profile-form .profile-field {
+  margin-bottom: 8px;
+  gap: 2px;
+}
+
+/* Giảm khoảng cách giữa các trường */
+.profile-form {
+  gap: 10px;
+}
+
+/* Giảm kích thước nút lưu/hủy trong form */
+.profile-form .form-buttons .save-button,
+.profile-form .form-buttons .cancel-button {
+  font-size: 14px;
+  padding: 6px 18px;
+  margin-top: 8px;
+  margin-right: 8px;
+  border-radius: 16px;
+}
+
+.profile-view-box {
+  background: #fafbfc;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 14px;
+  color: #333;
+  min-height: 28px;
+  line-height: 1.6;
+  max-width: 320px;
+  box-sizing: border-box;
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  user-select: text;
 }
