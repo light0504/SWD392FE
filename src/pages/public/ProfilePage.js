@@ -86,14 +86,14 @@ export default function ProfilePage() {
       const response = await updateUserProfile(changedFields);
       if (response && response.isSuccess) {
         await fetchUserProfile();
-        setSuccess('Profile updated successfully!');
+        setSuccess('Cập nhật profile thành công!');
         setIsEditing(false);
         setChangedFields({});
       } else {
-        setError(response.message || 'Failed to update profile.');
+        setError(response.message || 'Cập nhật profile thất bại.');
       }
     } catch (err) {
-      setError('Failed to update profile. Please try again.');
+      setError('Cập nhật profile thất bại. Xin thử lại.');
     }
   };
 
@@ -114,115 +114,126 @@ export default function ProfilePage() {
   };
 
   if (loading) {
-    return <div className="profile-container"><h2>Loading profile...</h2></div>;
+    return <div className="profile-container"><h2>Đang tải...</h2></div>;
   }
 
   return (
     <div className="profile-container">
       <div className="profile-card">
-        <h2>My profile</h2>
+        <h2>Hồ sơ của tôi</h2>
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
-        {isEditing ? (
-          <form onSubmit={handleSubmit} className="profile-form">
-            <div className="profile-field">
-              <label>First Name</label>
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="profile-field">
-              <label>Last Name</label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="profile-field">
-              <label>Phone</label>
-              <input
-                type="tel"
-                name="phoneNumber"
-                value={formData.phone}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="profile-field">
-              <label>Gender</label>
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-              >
-                <option value="">Select gender</option>
-                <option value={0}>Nam</option>
-                <option value={1}>Nữ</option>
-                <option value={2}>Other</option>
-              </select>
-            </div>
-            <div className="profile-field">
-              <label>Address</label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="profile-field">
-              <label>Profile Image URL</label>
-              <input
-                type="url"
-                name="imgURL"
-                value={formData.imgURL}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-buttons">
-              <button
-                type="submit"
-                className="save-button"
-                disabled={Object.keys(changedFields).length === 0}
-              >
-                Save
-              </button>
-              <button type="button" className="cancel-button" onClick={handleCancel}>
-                Cancel
-              </button>
-            </div>
-          </form>
-        ) : (
+        <div className="profile-content">
           <div className="profile-info">
-            <div className="profile-field">
-              <label>Name</label>
-              <p>{user?.firstName} {user?.lastName}</p>
-            </div>
-            <div className="profile-field">
-              <label>Email</label>
-              <p>{user?.email}</p>
-            </div>
-            <div className="profile-field">
-              <label>Phone</label>
-              <p>{user?.phone || 'Not specified'}</p>
-            </div>
-            <div className="profile-field">
-              <label>Gender</label>
-              <p>{typeof user?.gender === 'number' ? genderMap[user.gender] : user?.gender || 'Not specified'}</p>
-            </div>
-            <div className="profile-field">
-              <label>Address</label>
-              <p>{user?.address || 'Not specified'}</p>
-            </div>
-            <button className="edit-button" onClick={() => setIsEditing(true)}>
-              Edit
-            </button>
+            {isEditing ? (
+              <form onSubmit={handleSubmit} className="profile-form">
+                <div className="profile-field">
+                  <label>Họ</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="profile-field">
+                  <label>Tên</label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="profile-field">
+                  <label>Số điện thoại</label>
+                  <input
+                    type="tel"
+                    name="phoneNumber"
+                    value={formData.phone}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="profile-field">
+                  <label>Giới tính</label>
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                  >
+                    <option value="">Chọn giới tính</option>
+                    <option value={0}>Nam</option>
+                    <option value={1}>Nữ</option>
+                    <option value={2}>Khác</option>
+                  </select>
+                </div>
+                <div className="profile-field">
+                  <label>Địa chỉ</label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="profile-field">
+                  <label>URL của hình ảnh cho profile</label>
+                  <input
+                    type="url"
+                    name="imgURL"
+                    value={formData.imgURL}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="form-buttons">
+                  <button
+                    type="submit"
+                    className="save-button"
+                    disabled={Object.keys(changedFields).length === 0}
+                  >
+                    Save
+                  </button>
+                  <button type="button" className="cancel-button" onClick={handleCancel}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <div className="profile-field">
+                  <label>Họ và Tên</label>
+                  <p>{user?.firstName} {user?.lastName}</p>
+                </div>
+                <div className="profile-field">
+                  <label>Email</label>
+                  <p>{user?.email}</p>
+                </div>
+                <div className="profile-field">
+                  <label>Số điện thoại</label>
+                  <p>{user?.phone || 'Not specified'}</p>
+                </div>
+                <div className="profile-field">
+                  <label>Giới tính</label>
+                  <p>{typeof user?.gender === 'number' ? genderMap[user.gender] : user?.gender || 'Not specified'}</p>
+                </div>
+                <div className="profile-field">
+                  <label>Địa chỉ</label>
+                  <p>{user?.address || 'Not specified'}</p>
+                </div>
+                <button className="edit-button" onClick={() => setIsEditing(true)}>
+                  Sửa
+                </button>
+              </>
+            )}
           </div>
-        )}
+          <div className="profile-image">
+            <img
+              src={user?.imgURL || '/default-profile.png'}
+              alt="Profile"
+              className="user-profile-img"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
