@@ -6,10 +6,10 @@ import apiClient from './api';
  */
 const getOrderHistory = async () => {
   try {
-    const response = await apiClient.get('/orders/history');
+    const response = await apiClient.get(`/Order/customer/${customerId}`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching order history:', error);
+    console.error(`Error fetching order history for ${customerId}:`, error);
     throw error;
   }
 }; 

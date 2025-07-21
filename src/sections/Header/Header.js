@@ -27,7 +27,7 @@ const Header = () => {
   };
 
   const handleOrderHistory = () => {
-    navigate('/orders');
+    navigate('/order-history');
     setDropdownOpen(false);
   };
 

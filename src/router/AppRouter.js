@@ -11,6 +11,7 @@ import ServicesPage from '../pages/public/ServicesPage';
 import LoginPage from '../pages/public/LoginPage';
 import RegisterPage from '../pages/public/RegisterPage';
 import ProfilePage from '../pages/public/ProfilePage';
+import OrderHistoryPage from '../pages/public/OrderHistoryPage';
 import OrderPage from '../pages/public/OrderPage';
 
 // Dashboard Pages
@@ -35,8 +36,8 @@ const AppRouter = () => {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/order-history" element={<OrderHistoryPage />} />
         <Route path="/order" element={<OrderPage />} />
-
 
          {/* ======================= NOT FOUND ======================= */}
         <Route path="*" element={<div style={{padding: '5rem', textAlign: 'center'}}><h1>404 - Không tìm thấy trang</h1></div>} />
