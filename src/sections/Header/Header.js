@@ -81,6 +81,7 @@ const Header = () => {
           <ul>
             <li><NavLink to="/">Trang Chủ</NavLink></li>
             <li><NavLink to="/services">Dịch Vụ</NavLink></li>
+            <li><NavLink to="/membership">Thành Viên</NavLink></li>
           </ul>
         </nav>
 

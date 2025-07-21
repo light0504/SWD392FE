@@ -24,6 +24,7 @@ import AccessDeniedPage from '../pages/dashboard/AccessDeniedPage';
 import StaffManagement from '../pages/dashboard/StaffManagement';
 import ManagerOrderPage from '../pages/dashboard/ManagerOrderPage';
 import StaffWorklogPage from '../pages/dashboard/StaffWorklogPage';
+import MembershipPage from '../pages/public/MembershipPage';
 
 // Auth Components
 import ProtectedRoute from './ProtectedRoute';
@@ -40,6 +41,7 @@ const AppRouter = () => {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/order-history" element={<OrderHistoryPage />} />
         <Route path="/order" element={<OrderPage />} />
+        <Route path="/membership" element={<MembershipPage />} />
 
          {/* ======================= NOT FOUND ======================= */}
         <Route path="*" element={<div style={{padding: '5rem', textAlign: 'center'}}><h1>404 - Không tìm thấy trang</h1></div>} />
