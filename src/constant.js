@@ -26,3 +26,4 @@ export const ORDER_STATUS_TEXT = {
     [ORDER_STATUS.DELIVERED]: 'Đã bàn giao',
     [ORDER_STATUS.CANCELLED]: 'Đã hủy',
 };
+

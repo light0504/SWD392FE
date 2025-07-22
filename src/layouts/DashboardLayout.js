@@ -24,11 +24,18 @@ const Sidebar = () => {
             <NavLink to="/dashboard" end>Trang Chủ</NavLink>
             
             {/* SỬA ĐƯỜNG DẪN Ở ĐÂY */}
-            {isStaff && <NavLink to="/dashboard/schedule">Lịch Của Tôi</NavLink>}
+            {isStaff && 
+              <>
+              <NavLink to="/dashboard/schedule">Lịch Của Tôi</NavLink>
+              <NavLink to="/dashboard/my-worklog">Công Việc Của Tôi</NavLink>
+            </>
+            
+            }
 
             {isManager && (
                 <>
-                    <NavLink to="/dashboard/schedule-management">Quản Lý Lịch</NavLink>
+                    <NavLink to="/dashboard/schedule-management">Quản Lý Lịch Làm Việc</NavLink>
+                    <NavLink to="/dashboard/orders">Quản Lý Đơn Hàng</NavLink>
                     <NavLink to="/dashboard/revenue">Báo Cáo Doanh Thu</NavLink>
                     <NavLink to="/dashboard/services">Quản Lý Dịch Vụ</NavLink>
                     <NavLink to="/dashboard/staff-management">Quản Nhân Viên</NavLink>

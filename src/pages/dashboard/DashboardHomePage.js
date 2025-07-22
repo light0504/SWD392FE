@@ -4,7 +4,6 @@ import './DashboardPages.css'; // Tái sử dụng CSS chung
 
 const DashboardHomePage = () => {
     const { user } = useAuth();
-    console.log('Current user:', user);
     return (
         <div className="dashboard-page">
             <h1 className="page-title">Tổng quan</h1>
