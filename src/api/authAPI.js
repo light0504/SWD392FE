@@ -58,6 +58,17 @@ export const getCustomerProfile = async () => {
     return response.data;
 }
 
+export const deleteCustomerAccount = async (customerId) => {
+    try {
+        const response = await apiClient.delete(`/Customers/${customerId}`);
+        return response.data;
+    } catch (error) {
+        if (error.response && error.response.data) {
+            return error.response.data;
+        }
+        throw error;
+    }
+}
 // Bạn cũng có thể thêm các hàm khác ở đây
 // const logoutUser = async () => { ... }
 // const refreshToken = async () => { ... }

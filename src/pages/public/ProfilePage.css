@@ -52,6 +52,7 @@
   border-radius: 16px;
   border: 2px solid #eee;
   background: #fafafa;
+  justify-content: center;
 }
 
 .profile-field {

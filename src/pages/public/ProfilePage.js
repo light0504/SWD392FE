@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import './ProfilePage.css';
+import defaultProfile from '../../assets/default-profile.png';
+import { useAuth } from '../../hooks/useAuth';
 import { getCustomerProfile, updateUserProfile } from '../../api/authAPI';
 import { getMembershipsByCustomer } from '../../api/membershipAPI';
 
 const genderMap = {
-  0: 'Nam',
-  1: 'Nữ',
-  2: 'Other',
-  'MALE': 0,
-  'FEMALE': 1,
-  'OTHER': 2
+  1: 'Nam',
+  2: 'Nữ',
+  0: 'Other',
+  'MALE': 1,
+  'FEMALE': 2,
+  'OTHER': 0
 };
 
 export default function ProfilePage() {
-  const [user, setUser] = useState(null);
+  const [currusers, setUser] = useState(null);
+  const { user } = useAuth(); ;
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -44,7 +47,7 @@ export default function ProfilePage() {
         imgURL: profile.imgURL || ''
       });
     } catch (err) {
-      setError('Could not fetch user profile.');
+      setError('Could not fetch currusers profile.');
       setUser(null);
     } finally {
       setLoading(false);
@@ -75,7 +78,7 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
-    if (user && user.id) {
+    if (user) {
       fetchMembershipByCustomer(user.id);
     }
   }, [user]);
@@ -88,7 +91,7 @@ export default function ProfilePage() {
       ...prev,
       [name]: val
     }));
-    if (user && val !== user[name]) {
+    if (currusers && val !== currusers[name]) {
       setChangedFields(prev => ({
         ...prev,
         [name]: val
@@ -113,6 +116,7 @@ export default function ProfilePage() {
     try {
       const response = await updateUserProfile(changedFields);
       if (response && response.isSuccess) {
+        
         await fetchUserProfile();
         setSuccess('Cập nhật profile thành công!');
         setIsEditing(false);
@@ -126,14 +130,14 @@ export default function ProfilePage() {
   };
 
   const handleCancel = () => {
-    if (user) {
+    if (currusers) {
       setFormData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        phoneNumber: user.phone || '',
-        gender: typeof user.gender === 'number' ? user.gender : (genderMap[user.gender] ?? ''),
-        address: user.address || '',
-        imgURL: user.imgURL || ''
+        firstName: currusers.firstName || '',
+        lastName: currusers.lastName || '',
+        phoneNumber: currusers.phone || '',
+        gender: typeof currusers.gender === 'number' ? currusers.gender : (genderMap[currusers.gender] ?? ''),
+        address: currusers.address || '',
+        imgURL: currusers.imgURL || ''
       });
     }
     setChangedFields({});
@@ -155,7 +159,7 @@ export default function ProfilePage() {
           <div className="profile-left">
             <div className="profile-image">
               <img
-                src={user?.imgURL || '/default-profile.png'}
+                src={currusers?.imgURL || defaultProfile}
                 alt="Profile"
                 className="user-profile-img"
               />
@@ -179,7 +183,7 @@ export default function ProfilePage() {
                   <input
                     type="text"
                     name="firstName"
-                    value={formData.firstName}
+                    value={formData.lastName}
                     onChange={handleChange}
                   />
                 </div>
@@ -188,7 +192,7 @@ export default function ProfilePage() {
                   <input
                     type="text"
                     name="lastName"
-                    value={formData.lastName}
+                    value={formData.firstName}
                     onChange={handleChange}
                   />
                 </div>
@@ -209,9 +213,9 @@ export default function ProfilePage() {
                     onChange={handleChange}
                   >
                     <option value="">Chọn giới tính</option>
-                    <option value={0}>Nam</option>
-                    <option value={1}>Nữ</option>
-                    <option value={2}>Khác</option>
+                    <option value={1}>Nam</option>
+                    <option value={2}>Nữ</option>
+                    <option value={0}>Khác</option>
                   </select>
                 </div>
                 <div className="profile-field">
@@ -249,23 +253,23 @@ export default function ProfilePage() {
               <>
                 <div className="profile-field">
                   <label>Họ và Tên</label>
-                  <div className="profile-view-box">{user?.firstName} {user?.lastName}</div>
+                  <div className="profile-view-box">{currusers?.lastName} {currusers?.firstName}</div>
                 </div>
                 <div className="profile-field">
                   <label>Email</label>
-                  <div className="profile-view-box">{user?.email}</div>
+                  <div className="profile-view-box">{currusers?.email}</div>
                 </div>
                 <div className="profile-field">
                   <label>Số điện thoại</label>
-                  <div className="profile-view-box">{user?.phone || 'Not specified'}</div>
+                  <div className="profile-view-box">{currusers?.phone || 'Not specified'}</div>
                 </div>
                 <div className="profile-field">
                   <label>Giới tính</label>
-                  <div className="profile-view-box">{typeof user?.gender === 'number' ? genderMap[user.gender] : user?.gender || 'Not specified'}</div>
+                  <div className="profile-view-box">{typeof currusers?.gender === 'number' ? genderMap[currusers.gender] : currusers?.gender || 'Not specified'}</div>
                 </div>
                 <div className="profile-field">
                   <label>Địa chỉ</label>
-                  <div className="profile-view-box">{user?.address || 'Not specified'}</div>
+                  <div className="profile-view-box">{currusers?.address || 'Not specified'}</div>
                 </div>
                 <button className="edit-button" onClick={() => setIsEditing(true)}>
                   Sửa

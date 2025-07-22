@@ -5,7 +5,7 @@
     background-color: #f9fafb;
     min-height: calc(100vh - 160px);
 }
-.container {
+.order-container {
     max-width: 900px;
     margin: 0 auto;
     padding: 0 1rem;

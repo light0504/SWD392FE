@@ -27,9 +27,18 @@ const OrderHistoryPage = () => {
                 const response = await getOrderHistory(user.id);
                 if (response.isSuccess) {
                     setOrders(response.data.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate)));
-                } else { throw new Error(response.message); }
-            } catch (err) { setError(err.message || 'Lỗi tải lịch sử đơn hàng.'); } 
-            finally { setLoading(false); }
+                } else { 
+                    setError(response.message || 'Lỗi tải lịch sử đơn hàng.'); 
+                }
+            }catch (err) {
+            if (err.response?.status === 404 || err.response?.status === 400) {
+                setError('Không có đơn hàng.');
+            } else {
+                setError('Lỗi tải lịch sử đơn hàng.');
+            }
+            }finally { 
+                setLoading(false); 
+            }
         };
         fetchHistory();
     }, [user]);
@@ -130,7 +139,7 @@ const OrderHistoryPage = () => {
 
     return (
         <div className="user-page-container">
-            <div className="container">
+            <div className="order-container">
                 <h1 className="page-title">Lịch Sử Đơn Hàng</h1>
                 <p className="page-subtitle">Xem lại và quản lý các dịch vụ bạn đã đặt.</p>
                 <div className="content-box">{renderContent()}</div>
