@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './ProfilePage.css';
 import { getCustomerProfile, updateUserProfile } from '../../api/authAPI';
-import axios from 'axios';
+import { getMembershipsByCustomer } from '../../api/membershipAPI';
 
 const genderMap = {
   0: 'Nam',
@@ -54,9 +54,9 @@ export default function ProfilePage() {
   const fetchMembershipByCustomer = async (customerId) => {
     setLoadingMemberships(true);
     try {
-      const res = await axios.get(`/api/CustomerMembership/by-customer/${customerId}`);
-      if (res.data && res.data.isSuccess && Array.isArray(res.data.data)) {
-        setMemberships(res.data.data);
+      const res = await getMembershipsByCustomer(customerId);
+      if (res && res.isSuccess && Array.isArray(res.data)) {
+        setMemberships(res.data);
       } else {
         setMemberships([]);
       }
