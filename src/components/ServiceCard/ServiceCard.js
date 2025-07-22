@@ -3,11 +3,9 @@ import React from 'react';
 import useCart from '../../hooks/useCart'; // <-- IMPORT MỚI
 import './ServiceCard.css';
 
-// Component nhận toàn bộ object 'service' để có đủ thông tin (id, title, price...)
-// Component nhận props và hiển thị thông tin của một dịch vụ
 const ServiceCard = ({ service }) => {
-  const { name, description, price, duration } = service; // Destructure object
-  const { addToCart } = useCart(); // <-- LẤY HÀM addToCart từ context
+  const { name, description, price, duration } = service;
+  const { addToCart, closeCart} = useCart();
 
   return (
     <div className="service-card">
@@ -26,7 +24,10 @@ const ServiceCard = ({ service }) => {
         {/* NÚT THÊM MỚI */}
         <button 
             className="btn-add-to-cart"
-            onClick={() => addToCart(service)} // <-- GỌI HÀM KHI CLICK
+            onClick={() => {
+              addToCart(service);
+              closeCart(); // Đóng giỏ hàng sau khi thêm
+            }} 
         >
           Thêm vào giỏ
         </button>
