@@ -4,6 +4,7 @@ import defaultProfile from '../../assets/default-profile.png';
 import { useAuth } from '../../hooks/useAuth';
 import { getCustomerProfile, updateUserProfile } from '../../api/authAPI';
 import { getMembershipsByCustomer } from '../../api/membershipAPI';
+import { useNavigate } from 'react-router-dom';
 
 const genderMap = {
   1: 'Nam',
@@ -16,6 +17,7 @@ const genderMap = {
 
 export default function ProfilePage() {
   const [currusers, setUser] = useState(null);
+  const navigate = useNavigate();
   const { user } = useAuth(); ;
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -33,6 +35,7 @@ export default function ProfilePage() {
   const [memberships, setMemberships] = useState([]);
   const [loadingMemberships, setLoadingMemberships] = useState(true);
 
+
   const fetchUserProfile = async () => {
     try {
       const response = await getCustomerProfile();
@@ -41,7 +44,7 @@ export default function ProfilePage() {
       setFormData({
         firstName: profile.firstName || '',
         lastName: profile.lastName || '',
-        phone: profile.phone || '',
+        phoneNumber: profile.phone || '',
         gender: profile.gender || '',
         address: profile.address || '',
         imgURL: profile.imgURL || ''
@@ -70,7 +73,8 @@ export default function ProfilePage() {
     }
   };
 
-  useEffect(() => {
+  useEffect(() => { 
+
     const fetchAll = async () => {
       await fetchUserProfile();
     };
@@ -78,10 +82,15 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
+    if(!user){
+      navigate("/");
+      return;
+  }
+
     if (user) {
       fetchMembershipByCustomer(user.id);
     }
-  }, [user]);
+  }, [user, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

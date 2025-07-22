@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { getOrderHistory } from '../../api/orderAPI';
 import { getOrderStatusInfo, getOrderDetailStatusInfo, ORDER_STATUS_MAP } from '../../constants/status';
 import RatingModal from '../../components/RatingModal/RatingModal';
@@ -10,6 +11,7 @@ const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'curr
 const COMPLETED_DETAIL_STATUS = 3; // 'Completed' của OrderDetail là 3
 
 const OrderHistoryPage = () => {
+    const navigate = useNavigate();
     const { user } = useAuth();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -20,6 +22,10 @@ const OrderHistoryPage = () => {
     const [selectedDetailForRating, setSelectedDetailForRating] = useState(null);
 
     useEffect(() => {
+        if(!user){
+            navigate("/");
+            return;
+        }
         const fetchHistory = async () => {
             if (!user?.id) { setLoading(false); return; }
             setLoading(true);
@@ -41,7 +47,7 @@ const OrderHistoryPage = () => {
             }
         };
         fetchHistory();
-    }, [user]);
+    }, [user, navigate]);
 
     const filteredOrders = useMemo(() => {
         if (activeFilter === 'all') return orders;
