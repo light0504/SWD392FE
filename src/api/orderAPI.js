@@ -45,67 +45,15 @@ const getStaffOrders = async (staffId) => {
     }
 };
 
-/**
- * [STAFF/MANAGER] Cập nhật trạng thái của một chi tiết đơn hàng thành "Hoàn thành".
- * @param {string} orderDetailId - ID của chi tiết đơn hàng.
- * @param {string} note - (Tùy chọn) Ghi chú của nhân viên khi hoàn thành.
- * @returns {Promise<object>}
- */
-const completeOrderDetail = async (orderDetailId, note = '') => {
+const updateOrderDetailStatus = async (payload) => {
     try {
-        // Gửi 'note' dưới dạng một query parameter
-        // Axios sẽ tự động tạo URL: /OrderDetail/{id}/complete?note=noidungghichu
-        const response = await apiClient.patch(
-            `/OrderDetail/${orderDetailId}/complete`, 
-            null, // Không có body trong request PATCH này
-            {
-                params: {
-                    note: note // Tham số query
-                }
-            }
-        );
+        const response = await apiClient.patch('/OrderDetail/status', payload);
         return response.data;
     } catch (error) {
-        console.error(`Error completing order detail ${orderDetailId}:`, error);
+        console.error("Error updating order detail status:", error);
         throw error;
     }
 };
-
-const changeOrderDetail = async (orderDetailId, newStatus, note = '') => {
-    try {
-        // Gửi 'note' dưới dạng một query parameter
-        // Axios sẽ tự động tạo URL: /OrderDetail/{id}/complete?note=noidungghichu
-        const response = await apiClient.patch(
-            `/OrderDetail/${orderDetailId}/complete`, 
-            newStatus, 
-            {
-                params: {
-                    note: note // Tham số query
-                }
-            }
-        );
-        return response.data;
-    } catch (error) {
-        console.error(`Error completing order detail ${orderDetailId}:`, error);
-        throw error;
-    }
-};
-
-/**
- * [STAFF/MANAGER] Cập nhật trạng thái của một chi tiết đơn hàng thành "Đã hủy".
- * @param {string} orderDetailId - ID của chi tiết đơn hàng.
- * @returns {Promise<object>}
- */
-const cancelOrderDetail = async (orderDetailId) => {
-    try {
-        const response = await apiClient.patch(`/OrderDetail/${orderDetailId}/cancel`);
-        return response.data;
-    } catch (error) {
-        console.error(`Error cancelling order detail ${orderDetailId}:`, error);
-        throw error;
-    }
-};
-
 
 /**
  * Gửi yêu cầu tạo một đơn hàng mới.
@@ -116,6 +64,7 @@ const createOrder = async (orderPayload) => {
     try {
         // Giả sử endpoint tạo đơn hàng là /Order
         const response = await apiClient.post('/Order', orderPayload);
+        console.log("Order created successfully:", response);
         return response.data;
     } catch (error) {
         console.error("Error creating order:", error);
@@ -125,12 +74,27 @@ const createOrder = async (orderPayload) => {
         throw error;
     }
 };
+/**
+ * Lấy thông tin chi tiết của một đơn hàng cụ thể bằng ID.
+ * @param {string} orderId - ID của đơn hàng.
+ * @returns {Promise<object>}
+ */
+
+const getOrderById = async (orderId) => {
+    try {
+        // Giả sử endpoint là /Order/{id}
+        const response = await apiClient.get(`/Order/${orderId}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Error fetching order with id ${orderId}:`, error);
+        throw error;
+    }
+};
 
 export { getOrderHistory,
   createOrder,
   getAllOrder,
   getStaffOrders,
-  completeOrderDetail,
-  cancelOrderDetail,
-  changeOrderDetail };
+  updateOrderDetailStatus
+, getOrderById };
 

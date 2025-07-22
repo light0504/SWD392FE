@@ -13,6 +13,7 @@ import RegisterPage from '../pages/public/RegisterPage';
 import ProfilePage from '../pages/public/ProfilePage';
 import OrderHistoryPage from '../pages/public/OrderHistoryPage';
 import OrderPage from '../pages/public/OrderPage';
+import OrderSuccessPage from '../pages/public/OrderSuccessPage';
 
 // Dashboard Pages
 import DashboardHomePage from '../pages/dashboard/DashboardHomePage';
@@ -37,9 +38,23 @@ const AppRouter = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/services" element={<ServicesPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
+        
+        {/* ====================================================== */}
+      {/*       PROTECTED ROUTES FOR USERS (VAI TRÒ 'USER')      */}
+      {/* ====================================================== */}
+      {/* Các route này yêu cầu đăng nhập và sử dụng layout công khai */}
+      {/* <Route element={
+          <ProtectedRoute allowedRoles={['USER']}>
+              <PublicLayout />
+          </ProtectedRoute>
+      }> */}
         <Route path="/order-history" element={<OrderHistoryPage />} />
+        <Route path="/order-success" element={<OrderSuccessPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/order" element={<OrderPage />} />
+        {/* Thêm các trang khác cho người dùng ở đây, ví dụ: /profile */}
+      {/* </Route> */}
+        
 
          {/* ======================= NOT FOUND ======================= */}
         <Route path="*" element={<div style={{padding: '5rem', textAlign: 'center'}}><h1>404 - Không tìm thấy trang</h1></div>} />
@@ -49,7 +64,7 @@ const AppRouter = () => {
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute allowedRoles={['STAFF', 'MANAGER']}>
+          <ProtectedRoute allowedRoles={['STAFF', 'MANAGER','ADMIN']}>
             <DashboardLayout />
           </ProtectedRoute>
         }
@@ -74,7 +89,7 @@ const AppRouter = () => {
         <Route 
           path="schedule-management" 
           element={
-            <ProtectedRoute allowedRoles={['MANAGER']}>
+            <ProtectedRoute allowedRoles={['MANAGER', 'ADMIN']}>
               <ManagerSchedulePage />
             </ProtectedRoute>
           } 
@@ -83,20 +98,22 @@ const AppRouter = () => {
         <Route 
           path="staff-management" 
           element={
-            <ProtectedRoute allowedRoles={['MANAGER']}>
+            <ProtectedRoute allowedRoles={['ADMIN']}>
               <StaffManagement />
             </ProtectedRoute>
           } 
         />
         
-        <Route path="services" element={<ServiceManagementPage />} />
+        <Route path="services" element={<ProtectedRoute allowedRoles={['MANAGER','ADMIN']}>
+              <ServiceManagementPage/>
+            </ProtectedRoute>} />
         <Route path="access-denied" element={<AccessDeniedPage />} />
 
         {/* --- DOANH THU (CHỈ MANAGER) --- */}
         <Route 
             path="revenue" 
             element={
-                <ProtectedRoute allowedRoles={['MANAGER']}>
+                <ProtectedRoute allowedRoles={['MANAGER', 'ADMIN']}>
                     <RevenueReportPage />
                 </ProtectedRoute>
             } 
@@ -104,7 +121,7 @@ const AppRouter = () => {
         <Route
           path="orders"
           element={
-            <ProtectedRoute allowedRoles={['MANAGER']}>
+            <ProtectedRoute allowedRoles={['MANAGER', 'ADMIN']}>
               <ManagerOrderPage />
             </ProtectedRoute>
           }
