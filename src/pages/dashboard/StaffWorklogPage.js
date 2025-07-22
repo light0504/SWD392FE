@@ -1,22 +1,12 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { getStaffOrders, completeOrderDetail, cancelOrderDetail } from '../../api/orderAPI';
-import { getAllCustomers } from '../../api/userAPI'; // Vẫn cần để lấy tên khách hàng
+import { getStaffOrders, updateOrderDetailStatus } from '../../api/orderAPI';
+import { getAllCustomers } from '../../api/userAPI';
+import { ORDER_DETAIL_STATUS_MAP, getOrderDetailStatusInfo } from '../../constants/status';
 import './DashboardPages.css';
 import './StaffWorklogPage.css';
 
-// --- Hằng số và hàm tiện ích ---
-const STATUS_MAP = {
-    0: { text: 'Chờ xử lý', class: 'pending' },
-    1: { text: 'Đang thực hiện', class: 'processing' },
-    2: { text: 'Hoàn thành', class: 'completed' },
-    3: { text: 'Đã hủy', class: 'cancelled' },
-};
-const PENDING_STATUS = 0;
-
 const formatDate = (dateString) => new Date(dateString).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-const getStatusInfo = (status) => STATUS_MAP[status] || { text: 'Không rõ', class: 'unknown' };
-
 
 const StaffWorklogPage = () => {
     const { user } = useAuth();
@@ -24,15 +14,12 @@ const StaffWorklogPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [statusFilter, setStatusFilter] = useState('pending');
-    const [timeFilter, setTimeFilter] = useState('today');
-    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         const fetchWorklog = async () => {
             if (!user?.id) { setLoading(false); return; }
             setLoading(true);
             try {
-                // Gọi API lấy đơn hàng và danh sách khách hàng cùng lúc
                 const [ordersRes, customersRes] = await Promise.all([
                     getStaffOrders(user.id),
                     getAllCustomers()
@@ -44,13 +31,11 @@ const StaffWorklogPage = () => {
 
                 const customerMap = new Map(customersRes.data.map(c => [c.userId, `${c.lastName} ${c.firstName}`]));
 
-                // "Làm phẳng" dữ liệu: Lấy tất cả orderDetails từ tất cả orders
                 const allDetails = ordersRes.data.flatMap(order => 
                     order.orderDetails.map(detail => ({
                         ...detail,
                         orderId: order.id,
                         customerName: customerMap.get(order.customerId) || 'Khách vãng lai',
-                        orderDate: order.orderDate,
                     }))
                 );
                 setTasks(allDetails);
@@ -60,55 +45,71 @@ const StaffWorklogPage = () => {
         fetchWorklog();
     }, [user]);
 
-    // Lọc và tìm kiếm dữ liệu
     const filteredTasks = useMemo(() => {
-        const now = new Date();
-        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const startOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        const sortedTasks = [...tasks].sort((a, b) => new Date(a.scheduledTime) - new Date(b.scheduledTime));
+        if (statusFilter === 'all') return sortedTasks;
+        const key = Object.keys(ORDER_DETAIL_STATUS_MAP).find(k => ORDER_DETAIL_STATUS_MAP[k].class === statusFilter);
+        return sortedTasks.filter(t => t.status === parseInt(key));
+    }, [tasks, statusFilter]);
 
-        return tasks
-            .filter(task => { // Lọc theo thời gian
-                const taskDate = new Date(task.scheduledTime);
-                if (timeFilter === 'today') return taskDate >= startOfToday && taskDate < startOfTomorrow;
-                if (timeFilter === 'future') return taskDate >= startOfTomorrow;
-                if (timeFilter === 'past') return taskDate < startOfToday;
-                return true;
-            })
-            .filter(task => { // Lọc theo trạng thái
-                if (statusFilter === 'all') return true;
-                const key = Object.keys(STATUS_MAP).find(k => STATUS_MAP[k].class === statusFilter);
-                return task.status === parseInt(key);
-            })
-            .filter(task => { // Lọc theo từ khóa tìm kiếm
-                if (!searchTerm) return true;
-                return task.orderId.toLowerCase().includes(searchTerm.toLowerCase());
-            })
-            .sort((a, b) => new Date(a.scheduledTime) - new Date(b.scheduledTime));
-    }, [tasks, statusFilter, timeFilter, searchTerm]);
-
-    // Cập nhật trạng thái của một công việc trên UI
-    const updateTaskStatus = (orderDetailId, newStatus) => {
+    const updateTaskOnUI = (orderDetailId, newStatus, newNote = null) => {
         setTasks(prevTasks => prevTasks.map(task => 
-            // Quan trọng: Phải so sánh với ID duy nhất của OrderDetail
-            task.orderDetailId === orderDetailId ? { ...task, status: newStatus } : task
+            task.id === orderDetailId 
+                ? { ...task, status: newStatus, note: newNote !== null ? newNote : task.note } 
+                : task
         ));
     };
 
-    const handleComplete = async (orderDetailId) => {
-        if (!window.confirm("Bạn chắc chắn muốn hoàn thành công việc này?")) return;
+    const handleStatusChange = async (task, newStatus, requiresNote = false) => {
+        let note = "";
+        
+        if (requiresNote) {
+            note = window.prompt("Vui lòng nhập ghi chú hoàn thành (nếu có):");
+            if (note === null) return;
+        } else {
+            const statusText = ORDER_DETAIL_STATUS_MAP[newStatus]?.text.toLowerCase();
+            if (!window.confirm(`Bạn có chắc muốn chuyển trạng thái công việc thành "${statusText}" không?`)) {
+                return;
+            }
+        }
+
         try {
-            console.log(`Completing order detail ${orderDetailId}...`);
-            await completeOrderDetail(orderDetailId);
-            updateTaskStatus(orderDetailId, 2);
-        } catch (err) { alert("Cập nhật thất bại!"); }
+            const payload = {
+                orderDetailId: task.id,
+                newStatus: newStatus,
+                note: note
+            };
+            await updateOrderDetailStatus(payload);
+            updateTaskOnUI(task.id, newStatus, note);
+            alert("Cập nhật trạng thái thành công!");
+        } catch (err) {
+            alert("Cập nhật thất bại! Vui lòng thử lại.");
+        }
     };
 
-    const handleCancel = async (orderDetailId) => {
-        if (!window.confirm("Bạn chắc chắn muốn hủy công việc này?")) return;
-        try {
-            await cancelOrderDetail(orderDetailId);
-            updateTaskStatus(orderDetailId, 3); // 3 = Cancelled
-        } catch (err) { alert("Cập nhật thất bại!"); }
+    const renderTaskActions = (task) => {
+        const PENDING = 0;
+        const CONFIRMED = 1;
+        const IN_PROGRESS = 2;
+        const COMPLETED = 3;
+        const CANCELLED = 4;
+
+        switch (task.status) {
+            case PENDING:
+            case CONFIRMED:
+                return (
+                    <>
+                        <button className="btn-action btn-cancel" onClick={() => handleStatusChange(task, CANCELLED)}>Hủy</button>
+                        <button className="btn-action btn-progress" onClick={() => handleStatusChange(task, IN_PROGRESS)}>Bắt đầu</button>
+                    </>
+                );
+            case IN_PROGRESS:
+                return (
+                    <button className="btn-action btn-complete" onClick={() => handleStatusChange(task, COMPLETED, true)}>Hoàn thành</button>
+                );
+            default:
+                return null;
+        }
     };
 
     const renderContent = () => {
@@ -118,30 +119,26 @@ const StaffWorklogPage = () => {
 
         return (
             <div className="task-list">
-                {console.log("Rendering tasks:", filteredTasks)}
-                {filteredTasks.map(task => (
-                    // Sử dụng orderDetailId làm key để đảm bảo tính duy nhất
-                    <div key={task.orderDetailId} className="task-card">
-                        <div className="task-header">
-                            <span className="task-service-name">{task.serviceName}</span>
-                            <span className={`status-badge status-${getStatusInfo(task.status).class}`}>
-                                {getStatusInfo(task.status).text}
-                            </span>
-                        </div>
-                        <div className="task-body">
-                            <p><strong>Khách hàng:</strong> {task.customerName}</p>
-                            <p><strong>Lịch hẹn:</strong> {formatDate(task.scheduledTime)}</p>
-                            <p><strong>Mã ĐH:</strong> {task.orderId.substring(0, 8)}</p>
-                        </div>
-                        {task.status === PENDING_STATUS && (
-                            <div className="task-actions">
-                                {/* Truyền orderDetailId vào hàm xử lý */}
-                                <button className="btn-action btn-cancel" onClick={() => handleCancel(task.orderDetailId)}>Hủy</button>
-                                <button className="btn-action btn-complete" onClick={() => handleComplete(task.orderDetailId)}>Hoàn thành</button>
+                {filteredTasks.map(task => {
+                    const statusInfo = getOrderDetailStatusInfo(task.status);
+                    return (
+                        <div key={task.id} className="task-card">
+                            <div className="task-header">
+                                <span className="task-service-name">{task.serviceName}</span>
+                                <span className={`status-badge status-${statusInfo.class}`}>{statusInfo.text}</span>
                             </div>
-                        )}
-                    </div>
-                ))}
+                            <div className="task-body">
+                                <p><strong>Khách hàng:</strong> {task.customerName}</p>
+                                <p><strong>Lịch hẹn:</strong> {formatDate(task.scheduledTime)}</p>
+                                <p><strong>Mã ĐH:</strong> {task.orderId.substring(0, 8)}</p>
+                                {task.note && <p className="task-note"><strong>Ghi chú:</strong> {task.note}</p>}
+                            </div>
+                            <div className="task-actions">
+                                {renderTaskActions(task)}
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         );
     };
@@ -151,22 +148,13 @@ const StaffWorklogPage = () => {
             <h1 className="page-title">Công Việc Của Tôi</h1>
             <p className="page-subtitle">Danh sách các dịch vụ được phân công cho bạn.</p>
             <div className="content-box">
-                <div className="page-controls">
-                    <div className="time-filter-group">
-                        <button onClick={() => setTimeFilter('today')} className={timeFilter === 'today' ? 'active' : ''}>Hôm Nay</button>
-                        <button onClick={() => setTimeFilter('future')} className={timeFilter === 'future' ? 'active' : ''}>Sắp Tới</button>
-                        <button onClick={() => setTimeFilter('past')} className={timeFilter === 'past' ? 'active' : ''}>Đã Qua</button>
-                    </div>
-                    <div className="search-container">
-                        <input type="text" placeholder="Tìm theo mã đơn hàng..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-                    </div>
-                </div>
-
                 <div className="filter-tabs">
-                    <button onClick={() => setStatusFilter('pending')} className={statusFilter === 'pending' ? 'active' : ''}>Chờ xử lý</button>
-                    <button onClick={() => setStatusFilter('completed')} className={statusFilter === 'completed' ? 'active' : ''}>Hoàn thành</button>
-                    <button onClick={() => setStatusFilter('cancelled')} className={statusFilter === 'cancelled' ? 'active' : ''}>Đã hủy</button>
                     <button onClick={() => setStatusFilter('all')} className={statusFilter === 'all' ? 'active' : ''}>Tất Cả</button>
+                    {Object.values(ORDER_DETAIL_STATUS_MAP).map(status => (
+                        <button key={status.class} onClick={() => setStatusFilter(status.class)} className={statusFilter === status.class ? 'active' : ''}>
+                            {status.text}
+                        </button>
+                    ))}
                 </div>
                 {renderContent()}
             </div>
