@@ -9,3 +9,13 @@ export const getAllMemberships = async () => {
     throw error;
   }
 };
+
+export const getMembershipsByCustomer = async (customerId) => {
+  try {
+    const response = await apiClient.get(`/CustomerMembership/by-customer/${customerId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching memberships for customer ${customerId}:`, error);
+    throw error;
+  }
+};
