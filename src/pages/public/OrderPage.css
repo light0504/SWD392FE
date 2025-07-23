@@ -30,7 +30,6 @@
     gap: 2rem;
 }
 
-/* Panel danh sách dịch vụ */
 .service-list-panel, .selected-services-panel {
     background-color: #fff;
     border-radius: 8px;
@@ -46,8 +45,26 @@
     padding-bottom: 1rem;
 }
 
+.search-container-order {
+    margin-bottom: 1.5rem;
+}
+.search-input-order {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-input-order:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
 .service-list {
-    max-height: 70vh;
+    max-height: 60vh;
     overflow-y: auto;
     padding-right: 10px;
 }
@@ -79,7 +96,6 @@
 .service-info p { margin: 0; color: #6b7280; font-size: 0.9rem; }
 .service-price { font-weight: 600; font-size: 1.1rem; color: #16a34a; }
 
-/* Panel các dịch vụ đã chọn */
 .selected-services-panel {
     display: flex;
     flex-direction: column;
@@ -114,16 +130,45 @@
 
 .datetime-picker label { display: block; font-size: 0.9rem; margin-bottom: 0.25rem; font-weight: 500; }
 .datetime-picker input[type="datetime-local"] { width: 100%; padding: 0.5rem; border-radius: 5px; border: 1px solid #d1d5db; }
+.datetime-note { display: block; margin-top: 6px; font-size: 0.8rem; color: #6b7280; font-style: italic; }
+
 .empty-selection { color: #6b7280; text-align: center; padding: 3rem 1rem; margin: auto; }
 
 .order-summary { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; }
+
+.membership-info {
+    background-color: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #b45309;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
 .order-note { margin-bottom: 1.5rem; }
 .order-note label { display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; }
 .order-note textarea { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.95rem; font-family: inherit; resize: vertical; transition: border-color 0.2s, box-shadow 0.2s; }
 .order-note textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25); }
 
-.total-services { margin-bottom: 1rem; }
-.btn-submit-order { width: 100%; padding: 0.8rem; font-size: 1.1rem; font-weight: 600; color: #fff; background-color: #2563eb; border: none; border-radius: 6px; cursor: pointer; transition: background-color 0.2s; }
+.price-details {
+    margin-top: 1.5rem;
+    font-size: 1rem;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1rem;
+}
+.price-details p { display: flex; justify-content: space-between; margin: 0.5rem 0; }
+.price-details .total-price-original { text-decoration: line-through; color: #9ca3af; font-weight: normal; }
+.price-details .discount-row { color: #16a34a; }
+.price-details .final-price-row { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; font-size: 1.2rem; font-weight: 600; }
+.price-details .final-price-row strong { color: #dc3545; }
+
+.btn-submit-order {
+    width: 100%; padding: 0.8rem; font-size: 1.1rem; font-weight: 600; color: #fff;
+    background-color: #2563eb; border: none; border-radius: 6px; cursor: pointer;
+    transition: background-color 0.2s; margin-top: 1.5rem;
+}
 .btn-submit-order:hover:not(:disabled) { background-color: #1d4ed8; }
 .btn-submit-order:disabled { background-color: #9ca3af; cursor: not-allowed; }
 

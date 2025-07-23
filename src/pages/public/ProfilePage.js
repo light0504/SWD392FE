@@ -1,56 +1,88 @@
 import React, { useState, useEffect } from 'react';
 import './ProfilePage.css';
+import defaultProfile from '../../assets/default-profile.png';
 import { useAuth } from '../../hooks/useAuth';
-import { updateUserProfile } from '../../api/authAPI';
+import { getCustomerProfile, updateUserProfile } from '../../api/authAPI';
+import { getMembershipByCustomer } from '../../api/membershipAPI';
+import { useNavigate } from 'react-router-dom';
+
+const genderMap = {
+  1: 'Nam',
+  2: 'Nữ',
+  0: 'Khác',
+  MALE: 1,
+  FEMALE: 2,
+  OTHER: 0
+};
 
 export default function ProfilePage() {
-  const { user, setUser } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    phoneNumber: '',
-    gender: '',
-    address: '',
-    imgURL: ''
-  });
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const [currentUser, setCurrentUser] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [memberships, setMemberships] = useState([]);
   const [changedFields, setChangedFields] = useState({});
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingMemberships, setLoadingMemberships] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    if (user) {
-      setFormData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        phoneNumber: user.phoneNumber || '',
-        gender: user.gender || '',
-        address: user.address || '',
-        imgURL: user.imgURL || ''
-      });
+    if (!user) {
+      navigate('/');
+      return;
     }
-  }, [user]);
+
+    const fetchProfile = async () => {
+      try {
+        const res = await getCustomerProfile();
+        const profile = res.data || {};
+        setCurrentUser(profile);
+        setFormData({
+          firstName: profile.firstName || '',
+          lastName: profile.lastName || '',
+          phoneNumber: profile.phone || '',
+          gender: profile.gender || '',
+          address: profile.address || '',
+          imgURL: profile.imgURL || ''
+        });
+      } catch {
+        setError('Không thể tải hồ sơ người dùng.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchMemberships = async () => {
+      try {
+        const res = await getMembershipByCustomer(user.id);
+        if (res?.isSuccess && Array.isArray(res.data)) {
+          setMemberships(res.data);
+        }
+      } catch {
+        setMemberships([]);
+      } finally {
+        setLoadingMemberships(false);
+      }
+    };
+
+    fetchProfile();
+    fetchMemberships();
+  }, [user, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    // Only track field if it's different from original value
-    if (value !== user[name]) {
-      setChangedFields(prev => ({
-        ...prev,
-        [name]: value
-      }));
+    const newVal = name === 'gender' ? Number(value) : value;
+
+    setFormData((prev) => ({ ...prev, [name]: newVal }));
+    if (currentUser?.[name] !== newVal) {
+      setChangedFields((prev) => ({ ...prev, [name]: newVal }));
     } else {
-      // Remove field if it's back to original value
-      setChangedFields(prev => {
-        const newFields = { ...prev };
-        delete newFields[name];
-        return newFields;
-      });
+      const updated = { ...changedFields };
+      delete updated[name];
+      setChangedFields(updated);
     }
   };
 
@@ -58,149 +90,138 @@ export default function ProfilePage() {
     e.preventDefault();
     setError('');
     setSuccess('');
-    
-    // Only proceed if there are changes
+
     if (Object.keys(changedFields).length === 0) {
       setIsEditing(false);
       return;
     }
-    
+
     try {
-      const response = await updateUserProfile(changedFields);
-      if (response) {
-        setUser({ ...user, ...changedFields });
-        setSuccess('Profile updated successfully!');
+      const res = await updateUserProfile(changedFields);
+      if (res?.isSuccess) {
+        await getCustomerProfile().then((response) =>
+          setCurrentUser(response.data)
+        );
+        setSuccess('Cập nhật thành công!');
+        setChangedFields({});
         setIsEditing(false);
-        setChangedFields({}); // Reset changed fields
+      } else {
+        setError(res.message || 'Cập nhật thất bại.');
       }
-    } catch (err) {
-      setError('Failed to update profile. Please try again.');
-      console.error('Update error:', err);
+    } catch {
+      setError('Lỗi khi cập nhật hồ sơ.');
     }
   };
 
   const handleCancel = () => {
-    setFormData({
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      phoneNumber: user?.phoneNumber || '',
-      gender: user?.gender || '',
-      address: user?.address || '',
-      imgURL: user?.imgURL || ''
-    });
+    if (currentUser) {
+      setFormData({
+        firstName: currentUser.firstName || '',
+        lastName: currentUser.lastName || '',
+        phoneNumber: currentUser.phone || '',
+        gender:
+          typeof currentUser.gender === 'number'
+            ? currentUser.gender
+            : genderMap[currentUser.gender] ?? '',
+        address: currentUser.address || '',
+        imgURL: currentUser.imgURL || ''
+      });
+    }
     setChangedFields({});
     setIsEditing(false);
     setError('');
   };
 
+  if (loading) return <div className="profile-container"><h2>Đang tải...</h2></div>;
+
   return (
     <div className="profile-container">
       <div className="profile-card">
-        <h2>My profile</h2>
+        <h2>Hồ sơ của tôi</h2>
+
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
-        
-        {isEditing ? (
-          <form onSubmit={handleSubmit} className="profile-form">
-            <div className="profile-field">
-              <label>First Name</label>
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
+
+        <div className="profile-content">
+          <div className="profile-left">
+            <div className="profile-image">
+              <img
+                src={currentUser?.imgURL || defaultProfile}
+                alt="Profile"
+                className="user-profile-img"
               />
             </div>
-            <div className="profile-field">
-              <label>Last Name</label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-              />
+
+            <div className="memberships-section">
+              <h3 className="memberships-title">Gói thành viên</h3>
+              <div className="current-membership">
+                {loadingMemberships
+                  ? 'Đang tải...'
+                  : memberships[0]?.membershipName || 'Chưa có'}
+              </div>
             </div>
-            <div className="profile-field">
-              <label>Phone</label>
-              <input
-                type="tel"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="profile-field">
-              <label>Gender</label>
-              <select 
-                name="gender" 
-                value={formData.gender} 
-                onChange={handleChange}
-              >
-                <option value="">Select gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div className="profile-field">
-              <label>Address</label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="profile-field">
-              <label>Profile Image URL</label>
-              <input
-                type="url"
-                name="imgURL"
-                value={formData.imgURL}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-buttons">
-              <button 
-                type="submit" 
-                className="save-button"
-                disabled={Object.keys(changedFields).length === 0}
-              >
-                Save
-              </button>
-              <button type="button" className="cancel-button" onClick={handleCancel}>
-                Cancel
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="profile-info">
-            <div className="profile-field">
-              <label>Name</label>
-              <p>{user?.firstName} {user?.lastName}</p>
-            </div>
-            <div className="profile-field">
-              <label>Email</label>
-              <p>{user?.email}</p>
-            </div>
-            <div className="profile-field">
-              <label>Phone</label>
-              <p>{user?.phoneNumber || 'Not specified'}</p>
-            </div>
-            <div className="profile-field">
-              <label>Gender</label>
-              <p>{user?.gender || 'Not specified'}</p>
-            </div>
-            <div className="profile-field">
-              <label>Address</label>
-              <p>{user?.address || 'Not specified'}</p>
-            </div>
-            <button className="edit-button" onClick={() => setIsEditing(true)}>
-              Edit
-            </button>
           </div>
-        )}
+
+          <div className="profile-info">
+            {isEditing ? (
+              <form onSubmit={handleSubmit} className="profile-form">
+                <InputField label="Họ" name="firstName" value={formData.firstName} onChange={handleChange} />
+                <InputField label="Tên" name="lastName" value={formData.lastName} onChange={handleChange} />
+                <InputField label="Số điện thoại" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} type="tel" />
+                <SelectField label="Giới tính" name="gender" value={formData.gender} onChange={handleChange} />
+                <InputField label="Địa chỉ" name="address" value={formData.address} onChange={handleChange} />
+                <InputField label="Ảnh đại diện (URL)" name="imgURL" value={formData.imgURL} onChange={handleChange} type="url" />
+
+                <div className="form-buttons">
+                  <button type="submit" className="save-button" disabled={!Object.keys(changedFields).length}>Lưu</button>
+                  <button type="button" className="cancel-button" onClick={handleCancel}>Huỷ</button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <ViewField label="Họ và Tên" value={`${currentUser?.lastName} ${currentUser?.firstName}`} />
+                <ViewField label="Email" value={currentUser?.email} />
+                <ViewField label="Số điện thoại" value={currentUser?.phone || 'Chưa có'} />
+                <ViewField label="Giới tính" value={genderMap[currentUser?.gender] || 'Chưa có'} />
+                <ViewField label="Địa chỉ" value={currentUser?.address || 'Chưa có'} />
+                <button className="edit-button" onClick={() => setIsEditing(true)}>Sửa</button>
+              </>
+            )}
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
+
+function InputField({ label, name, value, onChange, type = 'text' }) {
+  return (
+    <div className="profile-field">
+      <label>{label}</label>
+      <input type={type} name={name} value={value} onChange={onChange} />
+    </div>
+  );
+}
+
+function SelectField({ label, name, value, onChange }) {
+  return (
+    <div className="profile-field">
+      <label>{label}</label>
+      <select name={name} value={value} onChange={onChange}>
+        <option value="">Chọn giới tính</option>
+        <option value={1}>Nam</option>
+        <option value={2}>Nữ</option>
+        <option value={0}>Khác</option>
+      </select>
+    </div>
+  );
+}
+
+function ViewField({ label, value }) {
+  return (
+    <div className="profile-field">
+      <label>{label}</label>
+      <div className="profile-view-box">{value}</div>
     </div>
   );
 }

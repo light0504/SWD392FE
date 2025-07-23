@@ -12,7 +12,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
   const hasPermission =
     allowedRoles && user.roles?.some(role => allowedRoles.includes(role));
-
   if (!hasPermission) {
     return <Navigate to="/dashboard/access-denied" replace />;
   }

@@ -2,55 +2,27 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { getAllOrder } from '../../api/orderAPI';
 import { getAllCustomers } from '../../api/userAPI';
 import { getAllStaff } from '../../api/staffapi';
+import { getOrderStatusInfo, getOrderDetailStatusInfo, ORDER_STATUS_MAP } from '../../constants/status'; // Import từ file mới
 import './DashboardPages.css';
 import './ManagerOrderPage.css';
 
-// --- Hằng số và hàm tiện ích ---
-const STATUS_MAP = {
-    0: { text: 'Chờ xử lý', class: 'pending' },
-    1: { text: 'Đang thực hiện', class: 'processing' },
-    2: { text: 'Hoàn thành', class: 'completed' },
-    3: { text: 'Đã hủy', class: 'cancelled' },
-};
-
-const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleString('vi-VN', { 
-        day: '2-digit', month: '2-digit', year: 'numeric', 
-        hour: '2-digit', minute: '2-digit' 
-    });
-};
-const formatCurrency = (amount) => {
-    if (typeof amount !== 'number') return 'N/A';
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-};
-const getStatusInfo = (status) => STATUS_MAP[status] || { text: 'Không rõ', class: 'unknown' };
-const getOverallOrderStatus = (orderDetails) => {
-    if (!orderDetails || orderDetails.length === 0) return 0;
-    const statuses = orderDetails.map(detail => detail.status);
-    if ([...new Set(statuses)].length === 1) return statuses[0];
-    return Math.min(...statuses);
-};
+// --- Các hàm tiện ích khác ---
+const formatDate = (dateString) => new Date(dateString).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
 // --- Component chính ---
 const ManagerOrderPage = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [statusFilter, setStatusFilter] = useState('all');
-    const [timeFilter, setTimeFilter] = useState('all');
-    const [searchTerm, setSearchTerm] = useState('');
+    const [activeFilter, setActiveFilter] = useState('all');
     const [expandedOrderId, setExpandedOrderId] = useState(null);
 
     useEffect(() => {
         const fetchAllData = async () => {
             setLoading(true);
             try {
-                const [orderRes, customerRes, staffRes] = await Promise.all([
-                    getAllOrder(), 
-                    getAllCustomers(), 
-                    getAllStaff()
-                ]);
+                const [orderRes, customerRes, staffRes] = await Promise.all([getAllOrder(), getAllCustomers(), getAllStaff()]);
 
                 if (!orderRes.isSuccess || !customerRes.isSuccess || !staffRes.isSuccess) {
                     throw new Error(orderRes.message || customerRes.message || staffRes.message || 'Lỗi tải dữ liệu.');
@@ -62,7 +34,6 @@ const ManagerOrderPage = () => {
                 const enrichedOrders = orderRes.data.map(order => ({
                     ...order,
                     customerName: customerMap.get(order.customerId) || 'Khách vãng lai',
-                    overallStatus: getOverallOrderStatus(order.orderDetails),
                     orderDetails: order.orderDetails.map(detail => ({
                         ...detail,
                         staffName: staffMap.get(detail.staffId) || 'Chưa phân công',
@@ -81,32 +52,10 @@ const ManagerOrderPage = () => {
     }, []);
 
     const filteredOrders = useMemo(() => {
-        const now = new Date();
-        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const startOfTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-
-        return orders
-            .filter(order => {
-                const orderDate = new Date(order.orderDate);
-                if (timeFilter === 'today') return orderDate >= startOfToday && orderDate < startOfTomorrow;
-                if (timeFilter === 'future') return orderDate >= startOfTomorrow;
-                if (timeFilter === 'past') return orderDate < startOfToday;
-                return true;
-            })
-            .filter(order => {
-                if (statusFilter === 'all') return true;
-                const key = Object.keys(STATUS_MAP).find(k => STATUS_MAP[k].class === statusFilter);
-                return order.overallStatus === parseInt(key);
-            })
-            .filter(order => {
-                if (!searchTerm) return true;
-                const lowerSearchTerm = searchTerm.toLowerCase();
-                return (
-                    order.id.toLowerCase().includes(lowerSearchTerm) ||
-                    order.customerName.toLowerCase().includes(lowerSearchTerm)
-                );
-            });
-    }, [orders, statusFilter, timeFilter, searchTerm]);
+        if (activeFilter === 'all') return orders;
+        const key = Object.keys(ORDER_STATUS_MAP).find(k => ORDER_STATUS_MAP[k].class === activeFilter);
+        return orders.filter(o => o.status === parseInt(key));
+    }, [orders, activeFilter]);
 
     const toggleOrderDetails = (orderId) => {
         setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
@@ -115,12 +64,12 @@ const ManagerOrderPage = () => {
     const renderContent = () => {
         if (loading) return <div className="loading-spinner"></div>;
         if (error) return <p className="error-message">{error}</p>;
-        if (filteredOrders.length === 0) return <p className="empty-message">Không có đơn hàng nào phù hợp với bộ lọc.</p>;
+        if (filteredOrders.length === 0) return <p className="empty-message">Không có đơn hàng nào phù hợp.</p>;
 
         return (
             <div className="order-table-container">
                 {filteredOrders.map(order => {
-                    const statusInfo = getStatusInfo(order.overallStatus);
+                    const statusInfo = getOrderStatusInfo(order.status);
                     const isExpanded = expandedOrderId === order.id;
                     return (
                         <div key={order.id} className="order-row-group">
@@ -139,9 +88,9 @@ const ManagerOrderPage = () => {
                                     <h4>Chi tiết dịch vụ:</h4>
                                     <ul className="details-list">
                                         {order.orderDetails.map((detail, index) => {
-                                            const detailStatusInfo = getStatusInfo(detail.status);
+                                            const detailStatusInfo = getOrderDetailStatusInfo(detail.status);
                                             return (
-                                                <li key={index} className="detail-item">
+                                                <li key={detail.id || index} className="detail-item">
                                                     <div className="detail-item-info">
                                                         <strong>{detail.serviceName}</strong>
                                                         <span>Lịch hẹn: {formatDate(detail.scheduledTime)}</span>
@@ -170,21 +119,10 @@ const ManagerOrderPage = () => {
             <h1 className="page-title">Quản Lý Đơn Hàng</h1>
             <p className="page-subtitle">Xem, lọc và quản lý tất cả các đơn hàng trong hệ thống.</p>
             <div className="content-box">
-                <div className="page-controls">
-                    <div className="time-filter-group">
-                        <button onClick={() => setTimeFilter('all')} className={timeFilter === 'all' ? 'active' : ''}>Mọi lúc</button>
-                        <button onClick={() => setTimeFilter('today')} className={timeFilter === 'today' ? 'active' : ''}>Hôm Nay</button>
-                        <button onClick={() => setTimeFilter('future')} className={timeFilter === 'future' ? 'active' : ''}>Tương Lai</button>
-                        <button onClick={() => setTimeFilter('past')} className={timeFilter === 'past' ? 'active' : ''}>Quá Khứ</button>
-                    </div>
-                    <div className="search-container">
-                        <input type="text" placeholder="Tìm theo mã ĐH, tên khách hàng..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-                    </div>
-                </div>
                 <div className="filter-tabs">
-                    <button onClick={() => setStatusFilter('all')} className={statusFilter === 'all' ? 'active' : ''}>Tất Cả</button>
-                    {Object.values(STATUS_MAP).map(status => (
-                        <button key={status.class} onClick={() => setStatusFilter(status.class)} className={statusFilter === status.class ? 'active' : ''}>{status.text}</button>
+                    <button onClick={() => setActiveFilter('all')} className={activeFilter === 'all' ? 'active' : ''}>Tất Cả</button>
+                    {Object.values(ORDER_STATUS_MAP).map(status => (
+                        <button key={status.class} onClick={() => setActiveFilter(status.class)} className={activeFilter === status.class ? 'active' : ''}>{status.text}</button>
                     ))}
                 </div>
                 <div className="order-table-header">

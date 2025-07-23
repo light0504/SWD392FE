@@ -22,14 +22,9 @@ const loginUser = async (email, password) => {
  * @param {object} userData - Only the fields that need to be updated
  * @returns {Promise<object>}
  */
-const updateUserProfile = async (changedFields) => {
+const updateUserProfile = async (profileData) => {
   try {
-    // Only send the fields that have values
-    const updateData = Object.fromEntries(
-      Object.entries(changedFields).filter(([_, value]) => value !== undefined && value !== '')
-    );
-    
-    const response = await apiClient.put('/Customers/me', updateData);
+    const response = await apiClient.put('/Customers/me', profileData);
     return response.data;
   } catch (error) {
     console.error("Error updating profile:", error);
@@ -58,7 +53,22 @@ const registerUser = async (userData) => {
     }
 }
 
+export const getCustomerProfile = async () => {
+    const response = await apiClient.get('/Customers/me');
+    return response.data;
+}
 
+export const deleteCustomerAccount = async (customerId) => {
+    try {
+        const response = await apiClient.delete(`/Customers/${customerId}`);
+        return response.data;
+    } catch (error) {
+        if (error.response && error.response.data) {
+            return error.response.data;
+        }
+        throw error;
+    }
+}
 // Bạn cũng có thể thêm các hàm khác ở đây
 // const logoutUser = async () => { ... }
 // const refreshToken = async () => { ... }

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react'; // <-- thêm useContext
+import React, { createContext, useState} from 'react'; // <-- thêm useContext
 import { loginUser} from '../api/authAPI'; // Giả sử bạn đã tạo file authAPI.js trong thư mục api
 
 export const AuthContext = createContext(null);
@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await loginUser(email, password);
+      console.log("Login response:", response);
       if (response.isSuccess && response.data) {
         setUser(response.data);
         sessionStorage.setItem('user', JSON.stringify(response.data));

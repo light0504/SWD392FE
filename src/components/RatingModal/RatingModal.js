@@ -18,14 +18,16 @@ const RatingModal = ({ orderDetail, onClose, onRatingSuccess }) => {
         setError(null);
 
         try {
+            console.log(orderDetail);
+            console.log("Submitting rating with score:", score, "and comment:", comment);
             const payload = {
-                orderDetailId: orderDetail.orderDetailId, // Giả sử API trả về trường này
+                orderDetailId: orderDetail.id, // Giả sử API trả về trường này
                 score: score,
                 comment: comment,
             };
-            
+            console.log("Submitting rating with payload:", payload);
             const response = await submitRating(payload);
-            
+            console.log("Rating response:", response);
             if (response.isSuccess) {
                 alert("Cảm ơn bạn đã đánh giá dịch vụ!");
                 onRatingSuccess(orderDetail.orderDetailId, score); // Cập nhật UI ở trang cha

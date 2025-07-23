@@ -1,87 +1,148 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import useCart from '../../hooks/useCart';
 import { getAllServices } from '../../api/serviceapi';
 import { createOrder } from '../../api/orderAPI';
+import { createPaymentUrl } from '../../api/paymentapi';
+import { getMembershipByCustomer } from '../../api/membershipAPI';
 import './OrderPage.css';
+
+// --- HÀM HELPER 1: Làm tròn phút của một đối tượng Date ---
+const snapTimeToQuarterHour = (date) => {
+    const minutes = date.getMinutes();
+    const roundedMinutes = Math.round(minutes / 15) * 15;
+    date.setMinutes(roundedMinutes, 0, 0);
+    return date;
+};
+
+// --- HÀM HELPER 2: Chuyển đổi một đối tượng Date sang chuỗi cho input ---
+const toInputDateTimeString = (date) => {
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    return date.toISOString().slice(0, 16);
+};
+
+// --- HÀM HELPER 3: Chuyển chuỗi từ input sang đối tượng Date ---
+const fromInputDateTimeString = (str) => {
+    return str ? new Date(str) : null;
+};
+
+// --- HÀM HELPER 4: Chuyển đổi Date object sang chuỗi local ISO ---
+const getLocalISOString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+};
+
+const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
 const OrderPage = () => {
     const { user } = useAuth();
+    const { clearCart } = useCart();
     const navigate = useNavigate();
     const location = useLocation();
 
     // === STATE MANAGEMENT ===
     const [allServices, setAllServices] = useState([]);
     const [selectedServices, setSelectedServices] = useState([]);
+    const [membership, setMembership] = useState(null);
     const [orderNote, setOrderNote] = useState('');
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
-
-    // === HELPERS ===
-    // Tạo chuỗi thời gian hợp lệ cho thuộc tính 'min' của input datetime-local
-    const getMinDateTime = () => {
-        const now = new Date();
-        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-        return now.toISOString().slice(0, 16);
-    };
-    const minDateTime = getMinDateTime();
+    const [lastUsedTime, setLastUsedTime] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    
+    const minDateTime = toInputDateTimeString(new Date());
 
     // === EFFECTS ===
-    // 1. Tải danh sách tất cả dịch vụ
     useEffect(() => {
-        const fetchServices = async () => {
+        const fetchInitialData = async () => {
+            if (!user) { setLoading(false); return; }
             setLoading(true);
             try {
-                const response = await getAllServices();
-                if (response.isSuccess) {
-                    setAllServices(response.data);
+                const [servicesRes, membershipRes] = await Promise.all([
+                    getAllServices(),
+                    getMembershipByCustomer(user.id)
+                ]);
+
+                if (servicesRes.isSuccess) {
+                    setAllServices(servicesRes.data);
                 } else {
-                    setError("Không thể tải danh sách dịch vụ.");
+                    throw new Error("Không thể tải danh sách dịch vụ.");
                 }
+
+                if (membershipRes.isSuccess && membershipRes.data && membershipRes.data.length > 0) {
+                    setMembership(membershipRes.data[0]);
+                }
+                
             } catch (err) {
-                setError("Lỗi kết nối máy chủ.");
+                setError(err.message || "Lỗi kết nối máy chủ.");
             } finally {
                 setLoading(false);
             }
         };
-        fetchServices();
-    }, []);
+        fetchInitialData();
+    }, [user]);
 
-    // 2. Khởi tạo danh sách dịch vụ đã chọn từ giỏ hàng (nếu có)
     useEffect(() => {
         const cartItems = location.state?.cartItemsFromSidebar;
         if (cartItems && Array.isArray(cartItems) && cartItems.length > 0) {
-            const initialServices = cartItems.map(item => ({
-                ...item,
-                quantity: 1,
-                scheduledTime: ''
-            }));
+            const initialServices = cartItems.map(item => ({ ...item, quantity: 1, scheduledTime: '' }));
             setSelectedServices(initialServices);
         }
     }, [location.state]);
 
-    // 3. Kiểm tra đăng nhập và chuyển hướng nếu cần
     useEffect(() => {
         if (!loading && !user) {
             navigate('/login', { state: { from: location } });
         }
     }, [user, loading, navigate, location]);
 
+    const filteredServices = useMemo(() => {
+        if (!searchTerm) {
+            return allServices;
+        }
+        return allServices.filter(service =>
+            service.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [allServices, searchTerm]);
+
+    const { totalPrice, discount, finalPrice } = useMemo(() => {
+        const originalPrice = selectedServices.reduce((total, s) => total + s.price * s.quantity, 0);
+        let discountPercentage = 0;
+        if (membership && membership.isActive) {
+            discountPercentage = membership.discountPercentage;
+        }
+        const discountAmount = (originalPrice * discountPercentage) / 100;
+        const finalAmount = originalPrice - discountAmount;
+        return { totalPrice: originalPrice, discount: discountAmount, finalPrice: finalAmount };
+    }, [selectedServices, membership]);
+
     // === EVENT HANDLERS ===
-    // Xử lý khi chọn/bỏ chọn dịch vụ
     const handleServiceToggle = (service) => {
         setSelectedServices(prev => {
             const isSelected = prev.some(s => s.id === service.id);
             if (isSelected) {
                 return prev.filter(s => s.id !== service.id);
             } else {
-                return [...prev, { ...service, quantity: 1, scheduledTime: '' }];
+                let initialTime;
+                if (lastUsedTime) {
+                    initialTime = lastUsedTime;
+                } else {
+                    const now = new Date();
+                    const roundedNow = snapTimeToQuarterHour(now);
+                    initialTime = toInputDateTimeString(roundedNow);
+                }
+                return [...prev, { ...service, quantity: 1, scheduledTime: initialTime }];
             }
         });
     };
 
-    // Xử lý thay đổi số lượng
     const handleQuantityChange = (serviceId, amount) => {
         setSelectedServices(prev =>
             prev.map(s => {
@@ -94,88 +155,87 @@ const OrderPage = () => {
         );
     };
 
-    // Xử lý thay đổi ngày giờ
     const handleDateTimeChange = (serviceId, value) => {
+        if (!value) return;
+        const dateObject = fromInputDateTimeString(value);
+        const snappedDate = snapTimeToQuarterHour(dateObject);
+        const finalValueString = toInputDateTimeString(snappedDate);
+        setLastUsedTime(finalValueString);
         setSelectedServices(prev =>
-            prev.map(s => (s.id === serviceId ? { ...s, scheduledTime: value } : s))
+            prev.map(s => (s.id === serviceId ? { ...s, scheduledTime: finalValueString } : s))
         );
     };
 
-    // Xử lý gửi đơn hàng
     const handleSubmitOrder = async () => {
-        if (selectedServices.length === 0) {
-            alert("Vui lòng chọn ít nhất một dịch vụ.");
-            return;
-        }
-        if (selectedServices.some(s => !s.scheduledTime)) {
-            alert("Vui lòng chọn ngày giờ cho tất cả các dịch vụ đã chọn.");
-            return;
-        }
-
+        if (selectedServices.length === 0) { alert("Vui lòng chọn ít nhất một dịch vụ."); return; }
+        if (selectedServices.some(s => !s.scheduledTime)) { alert("Vui lòng chọn ngày giờ cho tất cả các dịch vụ đã chọn."); return; }
         setSubmitting(true);
         setError(null);
-
         const orderPayload = {
             customerId: user.id,
-            orderDate: new Date().toISOString(),
+            orderDate: getLocalISOString(new Date()),
             services: selectedServices.flatMap(service =>
-                Array.from({ length: service.quantity }, () => ({
-                    serviceId: service.id,
-                    // Gửi đi chuỗi thời gian địa phương, không chuyển đổi
-                    scheduledTime: service.scheduledTime,
-                }))
+                Array.from({ length: service.quantity }, () => ({ serviceId: service.id, scheduledTime: service.scheduledTime }))
             ),
             note: orderNote,
         };
-
         try {
-            const response = await createOrder(orderPayload);
-            if (response.isSuccess) {
-                alert("Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.");
-                navigate('/');
+            const orderResponse = await createOrder(orderPayload);
+            if (!orderResponse.isSuccess) throw new Error(orderResponse.message || "Tạo đơn hàng thất bại.");
+            const newOrderId = orderResponse.data.id;
+            const paymentPayload = { orderId: newOrderId };
+            const paymentResponse = await createPaymentUrl(paymentPayload);
+            if (paymentResponse) {
+                clearCart();
+                window.location.href = paymentResponse;
             } else {
-                setError(response.message || "Đặt lịch thất bại.");
+                throw new Error(paymentResponse.message || "Không thể tạo liên kết thanh toán.");
             }
         } catch (err) {
-            setError("Đã có lỗi xảy ra khi gửi yêu cầu.");
-        } finally {
+            setError(err.message || "Đã có lỗi xảy ra trong quá trình đặt hàng.");
             setSubmitting(false);
         }
     };
 
-    if (loading) return <div className="page-loading">Đang tải danh sách dịch vụ...</div>;
-
+    if (loading) return <div className="page-loading">Đang tải...</div>;
 
     return (
         <div className="order-page">
             <div className="container">
-                <h1 className="page-title">Đặt Lịch Dịch Vụ</h1>
-                <p className="page-subtitle">Chọn dịch vụ, số lượng và đặt lịch hẹn ngay hôm nay!</p>
-
+                <h1 className="page-title">Đặt Lịch & Thanh Toán</h1>
+                <p className="page-subtitle">Chọn dịch vụ, đặt lịch hẹn và hoàn tất thanh toán trong một bước.</p>
                 <div className="order-layout">
-                    {/* Cột trái: Danh sách tất cả dịch vụ */}
                     <div className="service-list-panel">
                         <h2>Tất cả dịch vụ</h2>
+                        <div className="search-container-order">
+                            <input
+                                type="text"
+                                className="search-input-order"
+                                placeholder="Tìm kiếm dịch vụ theo tên..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
                         <div className="service-list">
-                            {allServices.map(service => (
-                                <div
-                                    key={service.id}
-                                    className={`service-item ${selectedServices.some(s => s.id === service.id) ? 'selected' : ''}`}
-                                    onClick={() => handleServiceToggle(service)}
-                                >
-                                    <div className="service-info">
-                                        <h3>{service.name}</h3>
-                                        <p>{service.description}</p>
+                            {filteredServices.length > 0 ? (
+                                filteredServices.map(service => (
+                                    <div
+                                        key={service.id}
+                                        className={`service-item ${selectedServices.some(s => s.id === service.id) ? 'selected' : ''}`}
+                                        onClick={() => handleServiceToggle(service)}
+                                    >
+                                        <div className="service-info">
+                                            <h3>{service.name}</h3>
+                                            <p>{service.description}</p>
+                                        </div>
+                                        <div className="service-price">{formatCurrency(service.price)}</div>
                                     </div>
-                                    <div className="service-price">
-                                        {new Intl.NumberFormat('vi-VN').format(service.price)}đ
-                                    </div>
-                                </div>
-                            ))}
+                                ))
+                            ) : (
+                                <p className="empty-selection">Không tìm thấy dịch vụ nào.</p>
+                            )}
                         </div>
                     </div>
-
-                    {/* Cột phải: Các dịch vụ đã chọn và đặt lịch */}
                     <div className="selected-services-panel">
                         <h2>Lịch hẹn của bạn</h2>
                         {selectedServices.length > 0 ? (
@@ -192,17 +252,14 @@ const OrderPage = () => {
                                             </div>
                                         </div>
                                         <div className="datetime-picker">
-                                            <label htmlFor={`datetime-${service.id}`}>Chọn ngày & giờ (mốc 15 phút):</label>
+                                            <label htmlFor={`datetime-${service.id}`}>Chọn ngày & giờ:</label>
                                             <input
-                                                type="datetime-local"
-                                                id={`datetime-${service.id}`}
+                                                type="datetime-local" id={`datetime-${service.id}`}
                                                 value={service.scheduledTime}
                                                 onChange={(e) => handleDateTimeChange(service.id, e.target.value)}
-                                                min={minDateTime}
-                                                // --- THAY ĐỔI: Thêm thuộc tính step ---
-                                                // 900 giây = 15 phút
-                                                step="900" 
+                                                min={minDateTime} step="900"
                                             />
+                                            <small className="datetime-note">(Thời gian sẽ được làm tròn đến mốc 15 phút)</small>
                                         </div>
                                     </div>
                                 ))}
@@ -210,29 +267,46 @@ const OrderPage = () => {
                         ) : (
                             <p className="empty-selection">Vui lòng chọn một dịch vụ từ danh sách bên trái.</p>
                         )}
-                        
                         {selectedServices.length > 0 && (
                             <div className="order-summary">
+                                {membership && membership.isActive && (
+                                    <div className="membership-info">
+                                        🎉 Chúc mừng! Bạn là thành viên <strong>{membership.membershipName}</strong>
+                                    </div>
+                                )}
                                 <div className="order-note">
                                     <label htmlFor="orderNote">Ghi chú cho đơn hàng:</label>
                                     <textarea
-                                        id="orderNote"
-                                        rows="3"
-                                        placeholder="Ví dụ: Thú cưng của tôi hơi nhát, vui lòng nhẹ nhàng..."
-                                        value={orderNote}
-                                        onChange={(e) => setOrderNote(e.target.value)}
+                                        id="orderNote" rows="3"
+                                        placeholder="Thú cưng của tôi hơi nhát, vui lòng nhẹ nhàng..."
+                                        value={orderNote} onChange={(e) => setOrderNote(e.target.value)}
                                     ></textarea>
                                 </div>
-                                <p className="total-services">
-                                    Tổng cộng: <strong>{selectedServices.reduce((total, s) => total + s.quantity, 0)} lượt dịch vụ</strong>
-                                </p>
+                                <div className="price-details">
+                                    <p>
+                                        <span>Tổng dịch vụ:</span>
+                                        <span className={discount > 0 ? 'total-price-original' : ''}>{formatCurrency(totalPrice)}</span>
+                                    </p>
+                                    {discount > 0 && (
+                                        <>
+                                            <p className="discount-row">
+                                                <span>Ưu đãi thành viên ({membership.discountPercentage}%):</span>
+                                                <span>- {formatCurrency(discount)}</span>
+                                            </p>
+                                            <p className="final-price-row">
+                                                <span>Thành tiền:</span>
+                                                <strong>{formatCurrency(finalPrice)}</strong>
+                                            </p>
+                                        </>
+                                    )}
+                                </div>
                                 {error && <p className="error-message">{error}</p>}
                                 <button
                                     className="btn-submit-order"
                                     onClick={handleSubmitOrder}
                                     disabled={submitting}
                                 >
-                                    {submitting ? 'Đang xử lý...' : 'Xác Nhận Đặt Lịch'}
+                                    {submitting ? 'Đang xử lý...' : 'Tiến hành Thanh toán'}
                                 </button>
                             </div>
                         )}

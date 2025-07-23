@@ -1,0 +1,170 @@
+/* Membership Page Styles */
+.membership-page {
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+.page-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #222b45;
+  margin-bottom: 0.5rem;
+}
+.page-subtitle {
+  font-size: 1.1rem;
+  color: #6c757d;
+  margin-bottom: 2rem;
+}
+.membership-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+}
+.membership-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: box-shadow 0.2s;
+  position: relative;
+}
+.membership-card:hover {
+  box-shadow: 0 6px 24px rgba(80,155,79,0.13);
+}
+.membership-image {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+  border-radius: 50%;
+  background: #f7fafd;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.membership-name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #509b4f;
+  margin-bottom: 0.5rem;
+}
+.membership-description {
+  font-size: 1rem;
+  color: #444;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.membership-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: center;
+}
+.membership-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e67e22;
+}
+.membership-discount {
+  font-size: 0.98rem;
+  color: #2980b9;
+  font-weight: 600;
+}
+.membership-duration {
+  font-size: 0.95rem;
+  color: #6c757d;
+}
+.page-loading {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #2980b9;
+  margin-top: 2rem;
+}
+.error-message {
+  text-align: center;
+  color: #e74c3c;
+  background: #fdecea;
+  border: 1px solid #e74c3c;
+  padding: 0.7rem 1rem;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+.btn-buy-membership {
+  margin-top: 1.2rem;
+  background: #509b4f;
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: 6px;
+  padding: 0.7rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(80,155,79,0.08);
+}
+.btn-buy-membership:hover {
+  background: #407a3c;
+}
+.qr-modal-content {
+  background: #fff;
+  padding: 2rem 2rem 1.5rem 2rem;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  min-width: 320px;
+  max-width: 95vw;
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: modalContentFadeIn 0.25s;
+}
+.qr-modal-content h2 {
+  font-size: 1.2rem;
+  color: #509b4f;
+  margin-bottom: 1.2rem;
+  text-align: center;
+}
+.qr-image {
+  width: 220px;
+  height: 220px;
+  object-fit: contain;
+  margin-bottom: 1.2rem;
+  border-radius: 12px;
+  background: #f7fafd;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.btn-cancel {
+  background-color: #6c757d;
+  color: white;
+  padding: 0.7rem 1.5rem;
+  border-radius: 5px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+@media (max-width: 700px) {
+  .membership-list {
+    gap: 1rem;
+  }
+  .membership-card {
+    width: 100%;
+    min-width: 0;
+    padding: 1.2rem 0.5rem;
+  }
+}
+@media (max-width: 600px) {
+  .qr-modal-content {
+    padding: 1rem 0.5rem;
+    min-width: 0;
+    max-width: 98vw;
+  }
+  .qr-image {
+    width: 140px;
+    height: 140px;
+  }
+}
