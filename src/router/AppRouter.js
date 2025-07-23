@@ -14,6 +14,7 @@ import ProfilePage from '../pages/public/ProfilePage';
 import OrderHistoryPage from '../pages/public/OrderHistoryPage';
 import OrderPage from '../pages/public/OrderPage';
 import OrderSuccessPage from '../pages/public/OrderSuccessPage';
+import ServiceDetailPage from '../pages/public/ServiceDetailPage';
 
 // Dashboard Pages
 import DashboardHomePage from '../pages/dashboard/DashboardHomePage';
@@ -39,6 +40,7 @@ const AppRouter = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/services" element={<ServicesPage />} />
+        <Route path="/services/:serviceId" element={<ServiceDetailPage />} />
         
         {/* ====================================================== */}
       {/*       PROTECTED ROUTES FOR USERS (VAI TRÒ 'USER')      */}
