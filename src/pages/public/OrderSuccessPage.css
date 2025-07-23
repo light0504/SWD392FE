@@ -1,10 +1,8 @@
-/* src/pages/public/OrderSuccessPage.css */
-
 .order-success-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: calc(100vh - 160px); /* Chiều cao trừ đi header/footer */
+    min-height: calc(100vh - 160px);
     padding: 2rem;
     background-color: #f9fafb;
 }
@@ -24,7 +22,6 @@
     width: 70px;
     height: 70px;
     margin: 0 auto 1.5rem auto;
-    background-color: #28a745;
     color: white;
     border-radius: 50%;
     display: flex;
@@ -34,10 +31,25 @@
     font-weight: bold;
 }
 
+/* ✅ Icon màu theo trạng thái */
+.success-icon.success {
+    background-color: #28a745;
+}
+.success-icon.fail {
+    background-color: #dc3545;
+}
+
 .order-success-box h2 {
     font-size: 2rem;
-    color: #1f2937;
     margin-bottom: 1rem;
+}
+
+/* ✅ Tiêu đề màu theo trạng thái */
+.order-success-box h2.success {
+    color: #1f2937;
+}
+.order-success-box h2.fail {
+    color: #dc3545;
 }
 
 .order-success-box p {
@@ -47,7 +59,6 @@
     margin-bottom: 2rem;
 }
 
-/* === PHẦN TÓM TẮT ĐƠN HÀNG === */
 .order-summary-details {
     background-color: #f8fafc;
     border: 1px solid #e5e7eb;
@@ -109,7 +120,6 @@
 .summary-total strong {
     color: #16a34a;
 }
-/* =============================== */
 
 .action-buttons {
     display: flex;
