@@ -3,36 +3,33 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getOrderById } from '../../api/orderAPI';
 import './OrderSuccessPage.css';
 
-// Hàm helper để định dạng ngày tháng
 const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleString('vi-VN', { 
-        day: '2-digit', month: '2-digit', year: 'numeric', 
-        hour: '2-digit', minute: '2-digit' 
+    return new Date(dateString).toLocaleString('vi-VN', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
     });
 };
 
-// Hàm helper để định dạng tiền tệ
 const formatCurrency = (amount) => {
     if (typeof amount !== 'number') return 'N/A';
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 
-
 const OrderSuccessPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    // Lấy orderId từ state được truyền qua khi navigate
-    const orderId = location.state?.orderId;
+
+    const searchParams = new URLSearchParams(location.search);
+    const orderId = searchParams.get('orderId');
+    const success = searchParams.get('success') === 'true';
 
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        // Nếu không có orderId, có nghĩa là người dùng truy cập trực tiếp
-        // vào URL này. Chuyển hướng họ về trang chủ để tránh lỗi.
-        if (!orderId) {
+        if (!orderId || orderId === 'unknown') {
             navigate('/');
             return;
         }
@@ -53,29 +50,39 @@ const OrderSuccessPage = () => {
             }
         };
 
-        fetchOrderDetails();
-    }, [orderId, navigate]);
+        if (success) {
+            fetchOrderDetails();
+        } else {
+            setLoading(false); // Không fetch nếu thất bại
+        }
+    }, [orderId, success, navigate]);
 
-
-    // Component con để render nội dung chi tiết
     const renderOrderSummary = () => {
+        if (!success) {
+            return (
+                <p className="status-text error-text">
+                    Thanh toán không thành công. Vui lòng thử lại hoặc liên hệ với chúng tôi.
+                </p>
+            );
+        }
+
         if (loading) {
             return <p className="status-text">Đang tải thông tin đơn hàng của bạn...</p>;
         }
+
         if (error) {
             return <p className="status-text error-text">Lỗi: {error}</p>;
         }
+
         if (!order) {
             return <p className="status-text">Không tìm thấy thông tin đơn hàng.</p>;
         }
 
-        // Nhóm các dịch vụ giống nhau lại để hiển thị dạng "Tắm gội x 2"
         const serviceSummary = order.orderDetails.reduce((acc, detail) => {
             if (!acc[detail.serviceName]) {
-                acc[detail.serviceName] = { 
-                    quantity: 0, 
-                    // Lấy lịch hẹn của lần đầu tiên xuất hiện
-                    scheduledTime: detail.scheduledTime 
+                acc[detail.serviceName] = {
+                    quantity: 0,
+                    scheduledTime: detail.scheduledTime
                 };
             }
             acc[detail.serviceName].quantity += 1;
@@ -111,10 +118,18 @@ const OrderSuccessPage = () => {
     return (
         <div className="order-success-container">
             <div className="order-success-box">
-                <div className="success-icon">✓</div>
-                <h2>Đặt Lịch Thành Công!</h2>
-                <p>Cảm ơn bạn đã tin tưởng dịch vụ của PetParadise. Đây là thông tin tóm tắt đơn hàng của bạn.</p>
-                
+                <div className={`success-icon ${success ? 'success' : 'fail'}`}>
+                    {success ? '✓' : '✗'}
+                </div>
+                <h2 className={success ? 'success' : 'fail'}>
+                    {success ? 'Đặt Lịch Thành Công!' : 'Thanh Toán Thất Bại'}
+                </h2>
+                <p>
+                    {success
+                        ? 'Cảm ơn bạn đã tin tưởng dịch vụ của PetParadise. Đây là thông tin tóm tắt đơn hàng của bạn.'
+                        : 'Đơn hàng chưa được thanh toán thành công. Bạn có thể thử lại hoặc liên hệ hỗ trợ.'}
+                </p>
+
                 {renderOrderSummary()}
 
                 <div className="action-buttons">

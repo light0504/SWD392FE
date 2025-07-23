@@ -26,6 +26,7 @@ const OrderHistoryPage = () => {
             try {
                 const response = await getOrderHistory(user.id);
                 if (response.isSuccess) {
+                    console.log("Order history fetched successfully:", response.data);
                     setOrders(response.data.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate)));
                 } else { 
                     setError(response.message || 'Lỗi tải lịch sử đơn hàng.'); 
