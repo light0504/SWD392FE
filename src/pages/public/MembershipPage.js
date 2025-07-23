@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { getAllMemberships } from '../../api/membershipAPI';
-import { generateVietQR } from '../../api/payAPI';
+import { getAllMemberships, getMembershipByCustomer, createMembershipOrder } from '../../api/membershipAPI';
+import { createPaymentURL } from '../../api/payAPI';
 import './MembershipPage.css';
 
 const MembershipPage = () => {
@@ -10,6 +10,7 @@ const MembershipPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [qrModal, setQrModal] = useState({ open: false, qrImageUrl: '', membershipName: '' });
+  const [userMembership, setUserMembership] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -33,20 +34,51 @@ const MembershipPage = () => {
     fetchMemberships();
   }, []);
 
+  useEffect(() => {
+    const fetchUserMembership = async () => {
+      if (user && user.id) {
+        try {
+          const res = await getMembershipByCustomer(user.id);
+          const memberships = Array.isArray(res?.data) ? res.data : [];
+          // Find active membership, or first if none active
+          const activeMembership = memberships.find(m => m.isActive) || memberships[0] || null;
+          setUserMembership(activeMembership);
+        } catch {
+          setUserMembership(null);
+        }
+      } else {
+        setUserMembership(null);
+      }
+    };
+    fetchUserMembership();
+  }, [user]);
+
   const handleBuyMembership = async (membership) => {
     if (!user) {
       navigate('/login');
       return;
     }
+    // Không cho mua nếu đã có membership khác basic
+    if (userMembership && userMembership.membershipName && userMembership.membershipName.toLowerCase() !== 'basic') {
+      alert(`Bạn đang sử dụng gói: ${userMembership.membershipName}. Không thể mua gói mới khi chưa hết hạn.`);
+      return;
+    }
     try {
-      const payResponse = await generateVietQR({
-        amount: membership.price,
-        addInfo: `Mua gói thành viên: ${membership.name}`
+      // Tạo order mua membership
+      const orderRes = await createMembershipOrder(user.id, membership.id);
+      if (!orderRes || !orderRes.data || !orderRes.data.id) {
+        alert('Không tạo được đơn hàng cho gói thành viên.');
+        return;
+      }
+      // Tạo payment url
+      const paymentRes = await createPaymentURL({
+        orderId: orderRes.data.id,
+        orderType: membership.id
       });
-      if (payResponse && payResponse.qrImageUrl) {
-        setQrModal({ open: true, qrImageUrl: payResponse.qrImageUrl, membershipName: membership.name });
+      if (paymentRes) {
+        window.open(paymentRes, '_blank');
       } else {
-        alert('Không lấy được mã QR thanh toán.');
+        alert('Không lấy được link thanh toán.');
       }
     } catch (err) {
       alert('Lỗi khi tạo thanh toán.');
@@ -77,9 +109,11 @@ const MembershipPage = () => {
               <span className="membership-discount">Giảm {m.discountPercentage}%</span>
               <span className="membership-duration">{m.durationInDays > 0 ? `${m.durationInDays} ngày` : 'Không giới hạn'}</span>
             </div>
-            <button className="btn-buy-membership" onClick={() => handleBuyMembership(m)}>
-              Mua gói này
-            </button>
+            {m.price > 0 && (
+              <button className="btn-buy-membership" onClick={() => handleBuyMembership(m)}>
+                Mua gói này
+              </button>
+            )}
           </div>
         ))}
       </div>
