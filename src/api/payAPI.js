@@ -12,3 +12,16 @@ export const generateVietQR = async ({ amount, addInfo }) => {
     throw error;
   }
 };
+
+export const createPaymentURL = async ({ orderId, orderType }) => {
+  try {
+    const response = await apiClient.post('/Payment/createPaymentURL', {
+      orderId,
+      orderType
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error creating payment URL:', error);
+    throw error;
+  }
+};
