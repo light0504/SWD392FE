@@ -4,23 +4,20 @@ import { useAuth } from '../../hooks/useAuth';
 import useCart from '../../hooks/useCart';
 import { getAllServices } from '../../api/serviceapi';
 import { createOrder } from '../../api/orderAPI';
+import { createPaymentUrl } from '../../api/paymentapi';
 import './OrderPage.css';
 
 // --- HÀM HELPER 1: Làm tròn phút của một đối tượng Date ---
 const snapTimeToQuarterHour = (date) => {
     const minutes = date.getMinutes();
-    // Công thức làm tròn đến bội số của 15
     const roundedMinutes = Math.round(minutes / 15) * 15;
-    date.setMinutes(roundedMinutes, 0, 0); // Đặt lại phút, reset giây và mili giây
+    date.setMinutes(roundedMinutes, 0, 0);
     return date;
 };
 
 // --- HÀM HELPER 2: Chuyển đổi một đối tượng Date sang chuỗi cho input ---
-// Input type="datetime-local" cần định dạng "YYYY-MM-DDTHH:mm"
 const toInputDateTimeString = (date) => {
-    // Bù lại múi giờ để toISOString không chuyển về UTC
     date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-    // Cắt chuỗi để có định dạng YYYY-MM-DDTHH:mm
     return date.toISOString().slice(0, 16);
 };
 
@@ -40,7 +37,6 @@ const getLocalISOString = (date) => {
     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 };
 
-
 const OrderPage = () => {
     const { user } = useAuth();
     const { clearCart } = useCart();
@@ -55,7 +51,6 @@ const OrderPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
     
-    // Lấy thời gian tối thiểu một lần để tối ưu
     const minDateTime = toInputDateTimeString(new Date());
 
     // === EFFECTS ===
@@ -98,11 +93,9 @@ const OrderPage = () => {
             if (isSelected) {
                 return prev.filter(s => s.id !== service.id);
             } else {
-                // Khi thêm mới, tự động gán thời gian hiện tại đã được làm tròn
                 const now = new Date();
                 const roundedNow = snapTimeToQuarterHour(now);
                 const initialTime = toInputDateTimeString(roundedNow);
-
                 return [...prev, { ...service, quantity: 1, scheduledTime: initialTime }];
             }
         });
@@ -121,12 +114,10 @@ const OrderPage = () => {
     };
 
     const handleDateTimeChange = (serviceId, value) => {
-        if (!value) return; // Bỏ qua nếu giá trị rỗng
-        
+        if (!value) return;
         const dateObject = fromInputDateTimeString(value);
         const snappedDate = snapTimeToQuarterHour(dateObject);
         const finalValueString = toInputDateTimeString(snappedDate);
-        
         setSelectedServices(prev =>
             prev.map(s => (s.id === serviceId ? { ...s, scheduledTime: finalValueString } : s))
         );
@@ -151,25 +142,33 @@ const OrderPage = () => {
             services: selectedServices.flatMap(service =>
                 Array.from({ length: service.quantity }, () => ({
                     serviceId: service.id,
-                    scheduledTime: service.scheduledTime, // Gửi đi chuỗi local time
+                    scheduledTime: service.scheduledTime,
                 }))
             ),
             note: orderNote,
         };
 
         try {
-            const response = await createOrder(orderPayload);
-            console.log("Order response:", response);
-            if (response.isSuccess) {
-                const newOrderId = response.data.id;
+            const orderResponse = await createOrder(orderPayload);
+            console.log("Order created successfully:", orderResponse);
+            if (!orderResponse.isSuccess) {
+                throw new Error(orderResponse.message || "Tạo đơn hàng thất bại.");
+            }
+            
+            const newOrderId = orderResponse.data.id;
+
+            const paymentPayload = {
+                orderId: newOrderId
+            };
+            const paymentResponse = await createPaymentUrl(paymentPayload);
+            if (paymentResponse) {
                 clearCart();
-                navigate('/order-success', { state: { orderId: newOrderId } });
+                window.location.href = paymentResponse;
             } else {
-                setError(response.message || "Đặt lịch thất bại.");
+                throw new Error(paymentResponse.message || "Không thể tạo liên kết thanh toán.");
             }
         } catch (err) {
-            setError("Đã có lỗi xảy ra khi gửi yêu cầu.");
-        } finally {
+            setError(err.message || "Đã có lỗi xảy ra trong quá trình đặt hàng.");
             setSubmitting(false);
         }
     };
@@ -182,8 +181,8 @@ const OrderPage = () => {
     return (
         <div className="order-page">
             <div className="container">
-                <h1 className="page-title">Đặt Lịch Dịch Vụ</h1>
-                <p className="page-subtitle">Chọn dịch vụ, số lượng và đặt lịch hẹn ngay hôm nay!</p>
+                <h1 className="page-title">Đặt Lịch & Thanh Toán</h1>
+                <p className="page-subtitle">Chọn dịch vụ, đặt lịch hẹn và hoàn tất thanh toán trong một bước.</p>
 
                 <div className="order-layout">
                     {/* Cột trái: Danh sách tất cả dịch vụ */}
@@ -201,7 +200,7 @@ const OrderPage = () => {
                                         <p>{service.description}</p>
                                     </div>
                                     <div className="service-price">
-                                        {service.price}đ
+                                        {new Intl.NumberFormat('vi-VN').format(service.price)}đ
                                     </div>
                                 </div>
                             ))}
@@ -261,7 +260,7 @@ const OrderPage = () => {
                                 <p className="total-services">
                                     Tổng cộng: <strong>{selectedServices.reduce((total, s) => total + s.quantity, 0)} lượt dịch vụ</strong>
                                     <br />
-                                    Tổng giá: <strong>{totalPrice}</strong>
+                                    Tổng giá: <strong>{new Intl.NumberFormat('vi-VN').format(totalPrice)}đ</strong>
                                 </p>
                                 {error && <p className="error-message">{error}</p>}
                                 <button
@@ -269,7 +268,7 @@ const OrderPage = () => {
                                     onClick={handleSubmitOrder}
                                     disabled={submitting}
                                 >
-                                    {submitting ? 'Đang xử lý...' : 'Xác Nhận Đặt Lịch'}
+                                    {submitting ? 'Đang xử lý...' : 'Tiến hành Thanh toán'}
                                 </button>
                             </div>
                         )}

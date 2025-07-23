@@ -13,6 +13,7 @@ export const ORDER_STATUS_MAP = {
     1: { text: 'Đang xử lý', class: 'processing' },
     2: { text: 'Hoàn thành', class: 'done' },
     3: { text: 'Đã hủy', class: 'cancelled' },
+    4: { text: 'Đã thanh toán', class: 'paid' },
 };
 
 // Hàm tiện ích để lấy thông tin trạng thái của OrderDetail
