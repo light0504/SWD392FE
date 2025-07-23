@@ -89,6 +89,27 @@
   box-shadow: 0 4px 16px rgba(251, 191, 36, 0.13);
 }
 
+.btn-detail {
+  padding: 0.45rem 0.9rem;
+  font-weight: 600;
+  background: #e3eefe;
+  color: #2563eb;
+  border: 1px solid #b6d0fa;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.98rem;
+  box-shadow: none;
+  transition: background 0.18s, color 0.18s, border 0.18s;
+  outline: none;
+}
+
+.btn-detail:hover,
+.btn-detail:focus {
+  background: #d0e2fd;
+  color: #1746a2;
+  border: 1px solid #2563eb;
+}
+
 /* Responsive styles */
 @media (max-width: 900px) {
   .service-card {
