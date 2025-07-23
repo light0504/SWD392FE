@@ -25,3 +25,21 @@ export const getOrderDetailStatusInfo = (status) => {
 export const getOrderStatusInfo = (status) => {
     return ORDER_STATUS_MAP[status] || { text: 'Không rõ', class: 'unknown' };
 };
+
+
+export const GENDER_MAP = {
+  0: { text: 'Khác'},
+  1: { text: 'Nam'},
+  2: { text: 'Nữ'}
+};
+
+export const getGenderText = (gender) => {
+    return GENDER_MAP[gender]?.text || 'Không rõ';
+}
+
+export const MEMBERSHIP_TYPE = {
+  BRONZE: 0,
+  SILVER: 1,
+  GOLD: 2,
+  PLATINUM: 3,
+};
