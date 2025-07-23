@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import useCart from '../../hooks/useCart';
 import { getAllServices } from '../../api/serviceapi';
 import { createOrder } from '../../api/orderAPI';
 import { createPaymentUrl } from '../../api/paymentapi';
+import { getMembershipByCustomer } from '../../api/membershipAPI';
 import './OrderPage.css';
 
 // --- HÀM HELPER 1: Làm tròn phút của một đối tượng Date ---
@@ -37,6 +38,8 @@ const getLocalISOString = (date) => {
     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 };
 
+const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
 const OrderPage = () => {
     const { user } = useAuth();
     const { clearCart } = useCart();
@@ -46,36 +49,50 @@ const OrderPage = () => {
     // === STATE MANAGEMENT ===
     const [allServices, setAllServices] = useState([]);
     const [selectedServices, setSelectedServices] = useState([]);
+    const [membership, setMembership] = useState(null);
     const [orderNote, setOrderNote] = useState('');
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
+    const [lastUsedTime, setLastUsedTime] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
     
     const minDateTime = toInputDateTimeString(new Date());
 
     // === EFFECTS ===
     useEffect(() => {
-        const fetchServices = async () => {
+        const fetchInitialData = async () => {
+            if (!user) { setLoading(false); return; }
             setLoading(true);
             try {
-                const response = await getAllServices();
-                if (response.isSuccess) setAllServices(response.data);
-                else setError("Không thể tải danh sách dịch vụ.");
+                const [servicesRes, membershipRes] = await Promise.all([
+                    getAllServices(),
+                    getMembershipByCustomer(user.id)
+                ]);
+
+                if (servicesRes.isSuccess) {
+                    setAllServices(servicesRes.data);
+                } else {
+                    throw new Error("Không thể tải danh sách dịch vụ.");
+                }
+
+                if (membershipRes.isSuccess && membershipRes.data && membershipRes.data.length > 0) {
+                    setMembership(membershipRes.data[0]);
+                }
+                
             } catch (err) {
-                setError("Lỗi kết nối máy chủ.");
+                setError(err.message || "Lỗi kết nối máy chủ.");
             } finally {
                 setLoading(false);
             }
         };
-        fetchServices();
-    }, []);
+        fetchInitialData();
+    }, [user]);
 
     useEffect(() => {
         const cartItems = location.state?.cartItemsFromSidebar;
         if (cartItems && Array.isArray(cartItems) && cartItems.length > 0) {
-            const initialServices = cartItems.map(item => ({
-                ...item, quantity: 1, scheduledTime: ''
-            }));
+            const initialServices = cartItems.map(item => ({ ...item, quantity: 1, scheduledTime: '' }));
             setSelectedServices(initialServices);
         }
     }, [location.state]);
@@ -86,6 +103,26 @@ const OrderPage = () => {
         }
     }, [user, loading, navigate, location]);
 
+    const filteredServices = useMemo(() => {
+        if (!searchTerm) {
+            return allServices;
+        }
+        return allServices.filter(service =>
+            service.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [allServices, searchTerm]);
+
+    const { totalPrice, discount, finalPrice } = useMemo(() => {
+        const originalPrice = selectedServices.reduce((total, s) => total + s.price * s.quantity, 0);
+        let discountPercentage = 0;
+        if (membership && membership.isActive) {
+            discountPercentage = membership.discountPercentage;
+        }
+        const discountAmount = (originalPrice * discountPercentage) / 100;
+        const finalAmount = originalPrice - discountAmount;
+        return { totalPrice: originalPrice, discount: discountAmount, finalPrice: finalAmount };
+    }, [selectedServices, membership]);
+
     // === EVENT HANDLERS ===
     const handleServiceToggle = (service) => {
         setSelectedServices(prev => {
@@ -93,9 +130,14 @@ const OrderPage = () => {
             if (isSelected) {
                 return prev.filter(s => s.id !== service.id);
             } else {
-                const now = new Date();
-                const roundedNow = snapTimeToQuarterHour(now);
-                const initialTime = toInputDateTimeString(roundedNow);
+                let initialTime;
+                if (lastUsedTime) {
+                    initialTime = lastUsedTime;
+                } else {
+                    const now = new Date();
+                    const roundedNow = snapTimeToQuarterHour(now);
+                    initialTime = toInputDateTimeString(roundedNow);
+                }
                 return [...prev, { ...service, quantity: 1, scheduledTime: initialTime }];
             }
         });
@@ -118,48 +160,30 @@ const OrderPage = () => {
         const dateObject = fromInputDateTimeString(value);
         const snappedDate = snapTimeToQuarterHour(dateObject);
         const finalValueString = toInputDateTimeString(snappedDate);
+        setLastUsedTime(finalValueString);
         setSelectedServices(prev =>
             prev.map(s => (s.id === serviceId ? { ...s, scheduledTime: finalValueString } : s))
         );
     };
 
     const handleSubmitOrder = async () => {
-        if (selectedServices.length === 0) {
-            alert("Vui lòng chọn ít nhất một dịch vụ.");
-            return;
-        }
-        if (selectedServices.some(s => !s.scheduledTime)) {
-            alert("Vui lòng chọn ngày giờ cho tất cả các dịch vụ đã chọn.");
-            return;
-        }
-
+        if (selectedServices.length === 0) { alert("Vui lòng chọn ít nhất một dịch vụ."); return; }
+        if (selectedServices.some(s => !s.scheduledTime)) { alert("Vui lòng chọn ngày giờ cho tất cả các dịch vụ đã chọn."); return; }
         setSubmitting(true);
         setError(null);
-
         const orderPayload = {
             customerId: user.id,
             orderDate: getLocalISOString(new Date()),
             services: selectedServices.flatMap(service =>
-                Array.from({ length: service.quantity }, () => ({
-                    serviceId: service.id,
-                    scheduledTime: service.scheduledTime,
-                }))
+                Array.from({ length: service.quantity }, () => ({ serviceId: service.id, scheduledTime: service.scheduledTime }))
             ),
             note: orderNote,
         };
-
         try {
             const orderResponse = await createOrder(orderPayload);
-            console.log("Order created successfully:", orderResponse);
-            if (!orderResponse.isSuccess) {
-                throw new Error(orderResponse.message || "Tạo đơn hàng thất bại.");
-            }
-            
+            if (!orderResponse.isSuccess) throw new Error(orderResponse.message || "Tạo đơn hàng thất bại.");
             const newOrderId = orderResponse.data.id;
-
-            const paymentPayload = {
-                orderId: newOrderId
-            };
+            const paymentPayload = { orderId: newOrderId };
             const paymentResponse = await createPaymentUrl(paymentPayload);
             if (paymentResponse) {
                 clearCart();
@@ -172,42 +196,46 @@ const OrderPage = () => {
             setSubmitting(false);
         }
     };
-    
-    const totalPrice = selectedServices.reduce((total, s) => total + s.price * s.quantity, 0);
 
-    // === RENDER ===
-    if (loading) return <div className="page-loading">Đang tải danh sách dịch vụ...</div>;
+    if (loading) return <div className="page-loading">Đang tải...</div>;
 
     return (
         <div className="order-page">
             <div className="container">
                 <h1 className="page-title">Đặt Lịch & Thanh Toán</h1>
                 <p className="page-subtitle">Chọn dịch vụ, đặt lịch hẹn và hoàn tất thanh toán trong một bước.</p>
-
                 <div className="order-layout">
-                    {/* Cột trái: Danh sách tất cả dịch vụ */}
                     <div className="service-list-panel">
                         <h2>Tất cả dịch vụ</h2>
+                        <div className="search-container-order">
+                            <input
+                                type="text"
+                                className="search-input-order"
+                                placeholder="Tìm kiếm dịch vụ theo tên..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
                         <div className="service-list">
-                            {allServices.map(service => (
-                                <div
-                                    key={service.id}
-                                    className={`service-item ${selectedServices.some(s => s.id === service.id) ? 'selected' : ''}`}
-                                    onClick={() => handleServiceToggle(service)}
-                                >
-                                    <div className="service-info">
-                                        <h3>{service.name}</h3>
-                                        <p>{service.description}</p>
+                            {filteredServices.length > 0 ? (
+                                filteredServices.map(service => (
+                                    <div
+                                        key={service.id}
+                                        className={`service-item ${selectedServices.some(s => s.id === service.id) ? 'selected' : ''}`}
+                                        onClick={() => handleServiceToggle(service)}
+                                    >
+                                        <div className="service-info">
+                                            <h3>{service.name}</h3>
+                                            <p>{service.description}</p>
+                                        </div>
+                                        <div className="service-price">{formatCurrency(service.price)}</div>
                                     </div>
-                                    <div className="service-price">
-                                        {new Intl.NumberFormat('vi-VN').format(service.price)}đ
-                                    </div>
-                                </div>
-                            ))}
+                                ))
+                            ) : (
+                                <p className="empty-selection">Không tìm thấy dịch vụ nào.</p>
+                            )}
                         </div>
                     </div>
-
-                    {/* Cột phải: Các dịch vụ đã chọn và đặt lịch */}
                     <div className="selected-services-panel">
                         <h2>Lịch hẹn của bạn</h2>
                         {selectedServices.length > 0 ? (
@@ -226,16 +254,12 @@ const OrderPage = () => {
                                         <div className="datetime-picker">
                                             <label htmlFor={`datetime-${service.id}`}>Chọn ngày & giờ:</label>
                                             <input
-                                                type="datetime-local"
-                                                id={`datetime-${service.id}`}
+                                                type="datetime-local" id={`datetime-${service.id}`}
                                                 value={service.scheduledTime}
                                                 onChange={(e) => handleDateTimeChange(service.id, e.target.value)}
-                                                min={minDateTime}
-                                                step="900" 
+                                                min={minDateTime} step="900"
                                             />
-                                            <small className="datetime-note">
-                                                (Thời gian sẽ được làm tròn đến mốc 15 phút)
-                                            </small>
+                                            <small className="datetime-note">(Thời gian sẽ được làm tròn đến mốc 15 phút)</small>
                                         </div>
                                     </div>
                                 ))}
@@ -243,25 +267,39 @@ const OrderPage = () => {
                         ) : (
                             <p className="empty-selection">Vui lòng chọn một dịch vụ từ danh sách bên trái.</p>
                         )}
-                        
                         {selectedServices.length > 0 && (
                             <div className="order-summary">
+                                {membership && membership.isActive && (
+                                    <div className="membership-info">
+                                        🎉 Chúc mừng! Bạn là thành viên <strong>{membership.membershipName}</strong>
+                                    </div>
+                                )}
                                 <div className="order-note">
                                     <label htmlFor="orderNote">Ghi chú cho đơn hàng:</label>
                                     <textarea
-                                        id="orderNote"
-                                        rows="3"
+                                        id="orderNote" rows="3"
                                         placeholder="Thú cưng của tôi hơi nhát, vui lòng nhẹ nhàng..."
-                                        value={orderNote}
-                                        onChange={(e) => setOrderNote(e.target.value)}
+                                        value={orderNote} onChange={(e) => setOrderNote(e.target.value)}
                                     ></textarea>
                                 </div>
-                                
-                                <p className="total-services">
-                                    Tổng cộng: <strong>{selectedServices.reduce((total, s) => total + s.quantity, 0)} lượt dịch vụ</strong>
-                                    <br />
-                                    Tổng giá: <strong>{new Intl.NumberFormat('vi-VN').format(totalPrice)}đ</strong>
-                                </p>
+                                <div className="price-details">
+                                    <p>
+                                        <span>Tổng dịch vụ:</span>
+                                        <span className={discount > 0 ? 'total-price-original' : ''}>{formatCurrency(totalPrice)}</span>
+                                    </p>
+                                    {discount > 0 && (
+                                        <>
+                                            <p className="discount-row">
+                                                <span>Ưu đãi thành viên ({membership.discountPercentage}%):</span>
+                                                <span>- {formatCurrency(discount)}</span>
+                                            </p>
+                                            <p className="final-price-row">
+                                                <span>Thành tiền:</span>
+                                                <strong>{formatCurrency(finalPrice)}</strong>
+                                            </p>
+                                        </>
+                                    )}
+                                </div>
                                 {error && <p className="error-message">{error}</p>}
                                 <button
                                     className="btn-submit-order"

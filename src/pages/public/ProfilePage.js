@@ -3,114 +3,86 @@ import './ProfilePage.css';
 import defaultProfile from '../../assets/default-profile.png';
 import { useAuth } from '../../hooks/useAuth';
 import { getCustomerProfile, updateUserProfile } from '../../api/authAPI';
-import { getMembershipsByCustomer } from '../../api/membershipAPI';
+import { getMembershipByCustomer } from '../../api/membershipAPI';
 import { useNavigate } from 'react-router-dom';
 
 const genderMap = {
   1: 'Nam',
   2: 'Nữ',
-  0: 'Other',
-  'MALE': 1,
-  'FEMALE': 2,
-  'OTHER': 0
+  0: 'Khác',
+  MALE: 1,
+  FEMALE: 2,
+  OTHER: 0
 };
 
 export default function ProfilePage() {
-  const [currusers, setUser] = useState(null);
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const { user } = useAuth(); ;
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    phoneNumber: '',
-    gender: '',
-    address: '',
-    imgURL: ''
-  });
+
+  const [currentUser, setCurrentUser] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [memberships, setMemberships] = useState([]);
   const [changedFields, setChangedFields] = useState({});
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingMemberships, setLoadingMemberships] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [memberships, setMemberships] = useState([]);
-  const [loadingMemberships, setLoadingMemberships] = useState(true);
-
-
-  const fetchUserProfile = async () => {
-    try {
-      const response = await getCustomerProfile();
-      const profile = response.data || {};
-      setUser(profile);
-      setFormData({
-        firstName: profile.firstName || '',
-        lastName: profile.lastName || '',
-        phoneNumber: profile.phone || '',
-        gender: profile.gender || '',
-        address: profile.address || '',
-        imgURL: profile.imgURL || ''
-      });
-    } catch (err) {
-      setError('Could not fetch currusers profile.');
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMembershipByCustomer = async (customerId) => {
-    setLoadingMemberships(true);
-    try {
-      const res = await getMembershipsByCustomer(customerId);
-      if (res && res.isSuccess && Array.isArray(res.data)) {
-        setMemberships(res.data);
-      } else {
-        setMemberships([]);
-      }
-    } catch (err) {
-      setMemberships([]);
-    } finally {
-      setLoadingMemberships(false);
-    }
-  };
-
-  useEffect(() => { 
-
-    const fetchAll = async () => {
-      await fetchUserProfile();
-    };
-    fetchAll();
-  }, []);
 
   useEffect(() => {
-    if(!user){
-      navigate("/");
+    if (!user) {
+      navigate('/');
       return;
-  }
-
-    if (user) {
-      fetchMembershipByCustomer(user.id);
     }
+
+    const fetchProfile = async () => {
+      try {
+        const res = await getCustomerProfile();
+        const profile = res.data || {};
+        setCurrentUser(profile);
+        setFormData({
+          firstName: profile.firstName || '',
+          lastName: profile.lastName || '',
+          phoneNumber: profile.phone || '',
+          gender: profile.gender || '',
+          address: profile.address || '',
+          imgURL: profile.imgURL || ''
+        });
+      } catch {
+        setError('Không thể tải hồ sơ người dùng.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchMemberships = async () => {
+      try {
+        const res = await getMembershipByCustomer(user.id);
+        if (res?.isSuccess && Array.isArray(res.data)) {
+          setMemberships(res.data);
+        }
+      } catch {
+        setMemberships([]);
+      } finally {
+        setLoadingMemberships(false);
+      }
+    };
+
+    fetchProfile();
+    fetchMemberships();
   }, [user, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    let val = value;
-    if (name === 'gender') val = Number(value);
-    setFormData(prev => ({
-      ...prev,
-      [name]: val
-    }));
-    if (currusers && val !== currusers[name]) {
-      setChangedFields(prev => ({
-        ...prev,
-        [name]: val
-      }));
+    const newVal = name === 'gender' ? Number(value) : value;
+
+    setFormData((prev) => ({ ...prev, [name]: newVal }));
+    if (currentUser?.[name] !== newVal) {
+      setChangedFields((prev) => ({ ...prev, [name]: newVal }));
     } else {
-      setChangedFields(prev => {
-        const newFields = { ...prev };
-        delete newFields[name];
-        return newFields;
-      });
+      const updated = { ...changedFields };
+      delete updated[name];
+      setChangedFields(updated);
     }
   };
 
@@ -118,35 +90,41 @@ export default function ProfilePage() {
     e.preventDefault();
     setError('');
     setSuccess('');
+
     if (Object.keys(changedFields).length === 0) {
       setIsEditing(false);
       return;
     }
+
     try {
-      const response = await updateUserProfile(changedFields);
-      if (response && response.isSuccess) {
-        
-        await fetchUserProfile();
-        setSuccess('Cập nhật profile thành công!');
-        setIsEditing(false);
+      const res = await updateUserProfile(changedFields);
+      if (res?.isSuccess) {
+        await getCustomerProfile().then((response) =>
+          setCurrentUser(response.data)
+        );
+        setSuccess('Cập nhật thành công!');
         setChangedFields({});
+        setIsEditing(false);
       } else {
-        setError(response.message || 'Cập nhật profile thất bại.');
+        setError(res.message || 'Cập nhật thất bại.');
       }
-    } catch (err) {
-      setError('Cập nhật profile thất bại. Xin thử lại.');
+    } catch {
+      setError('Lỗi khi cập nhật hồ sơ.');
     }
   };
 
   const handleCancel = () => {
-    if (currusers) {
+    if (currentUser) {
       setFormData({
-        firstName: currusers.firstName || '',
-        lastName: currusers.lastName || '',
-        phoneNumber: currusers.phone || '',
-        gender: typeof currusers.gender === 'number' ? currusers.gender : (genderMap[currusers.gender] ?? ''),
-        address: currusers.address || '',
-        imgURL: currusers.imgURL || ''
+        firstName: currentUser.firstName || '',
+        lastName: currentUser.lastName || '',
+        phoneNumber: currentUser.phone || '',
+        gender:
+          typeof currentUser.gender === 'number'
+            ? currentUser.gender
+            : genderMap[currentUser.gender] ?? '',
+        address: currentUser.address || '',
+        imgURL: currentUser.imgURL || ''
       });
     }
     setChangedFields({});
@@ -154,140 +132,96 @@ export default function ProfilePage() {
     setError('');
   };
 
-  if (loading) {
-    return <div className="profile-container"><h2>Đang tải...</h2></div>;
-  }
+  if (loading) return <div className="profile-container"><h2>Đang tải...</h2></div>;
 
   return (
     <div className="profile-container">
       <div className="profile-card">
         <h2>Hồ sơ của tôi</h2>
+
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
+
         <div className="profile-content">
           <div className="profile-left">
             <div className="profile-image">
               <img
-                src={currusers?.imgURL || defaultProfile}
+                src={currentUser?.imgURL || defaultProfile}
                 alt="Profile"
                 className="user-profile-img"
               />
             </div>
+
             <div className="memberships-section">
               <h3 className="memberships-title">Gói thành viên</h3>
-              {loadingMemberships ? (
-                <div>Đang tải...</div>
-              ) : (
-                <div className="current-membership">
-                   {memberships[0]?.name || 'Chưa có'}
-                </div>
-              )}
+              <div className="current-membership">
+                {loadingMemberships
+                  ? 'Đang tải...'
+                  : memberships[0]?.membershipName || 'Chưa có'}
+              </div>
             </div>
           </div>
+
           <div className="profile-info">
             {isEditing ? (
               <form onSubmit={handleSubmit} className="profile-form">
-                <div className="profile-field">
-                  <label>Họ</label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="profile-field">
-                  <label>Tên</label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="profile-field">
-                  <label>Số điện thoại</label>
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    value={formData.phoneNumber}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="profile-field">
-                  <label>Giới tính</label>
-                  <select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
-                  >
-                    <option value="">Chọn giới tính</option>
-                    <option value={1}>Nam</option>
-                    <option value={2}>Nữ</option>
-                    <option value={0}>Khác</option>
-                  </select>
-                </div>
-                <div className="profile-field">
-                  <label>Địa chỉ</label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="profile-field">
-                  <label>URL của hình ảnh cho profile</label>
-                  <input
-                    type="url"
-                    name="imgURL"
-                    value={formData.imgURL}
-                    onChange={handleChange}
-                  />
-                </div>
+                <InputField label="Họ" name="firstName" value={formData.firstName} onChange={handleChange} />
+                <InputField label="Tên" name="lastName" value={formData.lastName} onChange={handleChange} />
+                <InputField label="Số điện thoại" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} type="tel" />
+                <SelectField label="Giới tính" name="gender" value={formData.gender} onChange={handleChange} />
+                <InputField label="Địa chỉ" name="address" value={formData.address} onChange={handleChange} />
+                <InputField label="Ảnh đại diện (URL)" name="imgURL" value={formData.imgURL} onChange={handleChange} type="url" />
+
                 <div className="form-buttons">
-                  <button
-                    type="submit"
-                    className="save-button"
-                    disabled={Object.keys(changedFields).length === 0}
-                  >
-                    Save
-                  </button>
-                  <button type="button" className="cancel-button" onClick={handleCancel}>
-                    Cancel
-                  </button>
+                  <button type="submit" className="save-button" disabled={!Object.keys(changedFields).length}>Lưu</button>
+                  <button type="button" className="cancel-button" onClick={handleCancel}>Huỷ</button>
                 </div>
               </form>
             ) : (
               <>
-                <div className="profile-field">
-                  <label>Họ và Tên</label>
-                  <div className="profile-view-box">{currusers?.lastName} {currusers?.firstName}</div>
-                </div>
-                <div className="profile-field">
-                  <label>Email</label>
-                  <div className="profile-view-box">{currusers?.email}</div>
-                </div>
-                <div className="profile-field">
-                  <label>Số điện thoại</label>
-                  <div className="profile-view-box">{currusers?.phone || 'Not specified'}</div>
-                </div>
-                <div className="profile-field">
-                  <label>Giới tính</label>
-                  <div className="profile-view-box">{typeof currusers?.gender === 'number' ? genderMap[currusers.gender] : currusers?.gender || 'Not specified'}</div>
-                </div>
-                <div className="profile-field">
-                  <label>Địa chỉ</label>
-                  <div className="profile-view-box">{currusers?.address || 'Not specified'}</div>
-                </div>
-                <button className="edit-button" onClick={() => setIsEditing(true)}>
-                  Sửa
-                </button>
+                <ViewField label="Họ và Tên" value={`${currentUser?.lastName} ${currentUser?.firstName}`} />
+                <ViewField label="Email" value={currentUser?.email} />
+                <ViewField label="Số điện thoại" value={currentUser?.phone || 'Chưa có'} />
+                <ViewField label="Giới tính" value={genderMap[currentUser?.gender] || 'Chưa có'} />
+                <ViewField label="Địa chỉ" value={currentUser?.address || 'Chưa có'} />
+                <button className="edit-button" onClick={() => setIsEditing(true)}>Sửa</button>
               </>
             )}
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function InputField({ label, name, value, onChange, type = 'text' }) {
+  return (
+    <div className="profile-field">
+      <label>{label}</label>
+      <input type={type} name={name} value={value} onChange={onChange} />
+    </div>
+  );
+}
+
+function SelectField({ label, name, value, onChange }) {
+  return (
+    <div className="profile-field">
+      <label>{label}</label>
+      <select name={name} value={value} onChange={onChange}>
+        <option value="">Chọn giới tính</option>
+        <option value={1}>Nam</option>
+        <option value={2}>Nữ</option>
+        <option value={0}>Khác</option>
+      </select>
+    </div>
+  );
+}
+
+function ViewField({ label, value }) {
+  return (
+    <div className="profile-field">
+      <label>{label}</label>
+      <div className="profile-view-box">{value}</div>
     </div>
   );
 }
