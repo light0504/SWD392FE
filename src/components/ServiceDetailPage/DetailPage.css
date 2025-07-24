@@ -1,0 +1,234 @@
+/* Container for the entire detail page */
+.detail-page-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  min-height: calc(100vh - 200px);
+}
+
+/* Loading state */
+.detail-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  font-size: 18px;
+  color: #666;
+}
+
+.detail-loading::after {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-left: 10px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Error state */
+.detail-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  padding: 20px;
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  color: #c33;
+  font-size: 16px;
+  text-align: center;
+}
+
+/* Service detail card */
+.service-detail-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  transition: transform 0.2s ease;
+}
+
+.service-detail-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Service name/title */
+.service-detail-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 20px;
+  line-height: 1.2;
+  border-bottom: 3px solid #3498db;
+  padding-bottom: 15px;
+}
+
+/* Service description */
+.service-detail-description {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #555;
+  margin-bottom: 30px;
+  text-align: justify;
+}
+
+/* Info section container */
+.service-detail-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 1px solid #eee;
+}
+
+/* Individual info items */
+.service-info-item {
+  flex: 1;
+  min-width: 200px;
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  transition: background-color 0.3s ease;
+}
+
+.service-info-item:hover {
+  background: #e9ecef;
+}
+
+.service-info-label {
+  font-size: 14px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.service-info-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #3498db;
+}
+
+.service-info-value.price::before {
+  content: '$';
+  font-size: 20px;
+  vertical-align: top;
+}
+
+.service-info-value.duration::after {
+  content: ' min';
+  font-size: 16px;
+  font-weight: 400;
+  color: #666;
+}
+
+/* Action buttons section */
+.service-detail-actions {
+  margin-top: 40px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-book-now {
+  flex: 1;
+  min-width: 200px;
+  padding: 15px 30px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.btn-book-now:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+}
+
+.btn-back {
+  padding: 15px 30px;
+  background: transparent;
+  color: #666;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+  border-color: #3498db;
+  color: #3498db;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .detail-page-container {
+    padding: 20px 15px;
+  }
+
+  .service-detail-card {
+    padding: 25px;
+  }
+
+  .service-detail-title {
+    font-size: 28px;
+  }
+
+  .service-detail-description {
+    font-size: 16px;
+  }
+
+  .service-detail-info {
+    gap: 15px;
+  }
+
+  .service-info-item {
+    min-width: 150px;
+    padding: 15px;
+  }
+
+  .service-info-value {
+    font-size: 24px;
+  }
+
+  .service-detail-actions {
+    flex-direction: column;
+  }
+
+  .btn-book-now,
+  .btn-back {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .service-detail-title {
+    font-size: 24px;
+  }
+
+  .service-info-item {
+    min-width: 100%;
+  }
+}
