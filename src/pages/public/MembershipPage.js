@@ -9,7 +9,7 @@ const MembershipPage = () => {
   const [memberships, setMemberships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [qrModal, setQrModal] = useState({ open: false, qrImageUrl: '', membershipName: '' });
+  const [noticeModal, setNoticeModal] = useState({ open: false, message: '' });
   const [userMembership, setUserMembership] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -60,14 +60,14 @@ const MembershipPage = () => {
     }
     // Không cho mua nếu đã có membership khác basic
     if (userMembership && userMembership.membershipName && userMembership.membershipName.toLowerCase() !== 'basic') {
-      alert(`Bạn đang sử dụng gói: ${userMembership.membershipName}. Không thể mua gói mới khi chưa hết hạn.`);
+      setNoticeModal({ open: true, message: `Bạn đang sử dụng gói: ${userMembership.membershipName}. Không thể mua gói mới khi chưa hết hạn.` });
       return;
     }
     try {
       // Tạo order mua membership
       const orderRes = await createMembershipOrder(user.id, membership.id);
       if (!orderRes || !orderRes.data || !orderRes.data.id) {
-        alert('Không tạo được đơn hàng cho gói thành viên.');
+        setNoticeModal({ open: true, message: 'Không tạo được đơn hàng cho gói thành viên.' });
         return;
       }
       // Tạo payment url
@@ -76,17 +76,17 @@ const MembershipPage = () => {
         orderType: membership.id
       });
       if (paymentRes) {
-        window.open(paymentRes, '_blank');
+        window.location.href = paymentRes;
       } else {
-        alert('Không lấy được link thanh toán.');
+        setNoticeModal({ open: true, message: 'Không lấy được link thanh toán.' });
       }
     } catch (err) {
-      alert('Lỗi khi tạo thanh toán.');
+      setNoticeModal({ open: true, message: 'Lỗi khi tạo thanh toán.' });
     }
   };
 
-  const handleCloseQrModal = () => {
-    setQrModal({ open: false, qrImageUrl: '', membershipName: '' });
+  const handleCloseNoticeModal = () => {
+    setNoticeModal({ open: false, message: '' });
   };
 
   if (loading) return <div className="page-loading">Đang tải danh sách gói thành viên...</div>;
@@ -117,12 +117,12 @@ const MembershipPage = () => {
           </div>
         ))}
       </div>
-      {qrModal.open && (
+      {noticeModal.open && (
         <div className="modal-overlay">
-          <div className="qr-modal-content">
-            <h2>Quét mã QR để thanh toán gói: {qrModal.membershipName}</h2>
-            <img src={qrModal.qrImageUrl} alt="QR Thanh toán" className="qr-image" />
-            <button className="btn-cancel" onClick={handleCloseQrModal}>Đóng</button>
+          <div className="notice-modal-content">
+            <h2>Thông báo</h2>
+            <p>{noticeModal.message}</p>
+            <button className="btn-cancel" onClick={handleCloseNoticeModal}>Đóng</button>
           </div>
         </div>
       )}
