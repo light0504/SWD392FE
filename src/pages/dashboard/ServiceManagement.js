@@ -171,7 +171,7 @@ const ServiceManagement = () => {
 
             {isModalOpen && (
                 <div className="modal-overlay">
-                    <div className="modal-content">
+                    <div className="service-management-modal-content">
                         <h2>Tạo dịch vụ mới</h2>
                         <form onSubmit={handleCreateService}>
                              {/* Các form-group giữ nguyên */}

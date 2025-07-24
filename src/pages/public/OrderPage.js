@@ -6,28 +6,23 @@ import { getAllServices } from '../../api/serviceapi';
 import { createOrder } from '../../api/orderAPI';
 import { createPaymentUrl } from '../../api/paymentapi';
 import { getMembershipByCustomer } from '../../api/membershipAPI';
+import ConfirmationModal from '../../components/ConfirmationModal/ConfirmationModal';
 import './OrderPage.css';
 
-// --- HÀM HELPER 1: Làm tròn phút của một đối tượng Date ---
+// --- Các hàm Helper ---
 const snapTimeToQuarterHour = (date) => {
     const minutes = date.getMinutes();
     const roundedMinutes = Math.round(minutes / 15) * 15;
     date.setMinutes(roundedMinutes, 0, 0);
     return date;
 };
-
-// --- HÀM HELPER 2: Chuyển đổi một đối tượng Date sang chuỗi cho input ---
 const toInputDateTimeString = (date) => {
     date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
     return date.toISOString().slice(0, 16);
 };
-
-// --- HÀM HELPER 3: Chuyển chuỗi từ input sang đối tượng Date ---
 const fromInputDateTimeString = (str) => {
     return str ? new Date(str) : null;
 };
-
-// --- HÀM HELPER 4: Chuyển đổi Date object sang chuỗi local ISO ---
 const getLocalISOString = (date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -37,7 +32,6 @@ const getLocalISOString = (date) => {
     const seconds = String(date.getSeconds()).padStart(2, '0');
     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 };
-
 const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
 const OrderPage = () => {
@@ -56,6 +50,7 @@ const OrderPage = () => {
     const [error, setError] = useState(null);
     const [lastUsedTime, setLastUsedTime] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     
     const minDateTime = toInputDateTimeString(new Date());
 
@@ -166,11 +161,16 @@ const OrderPage = () => {
         );
     };
 
-    const handleSubmitOrder = async () => {
+    const handleOpenConfirmation = () => {
         if (selectedServices.length === 0) { alert("Vui lòng chọn ít nhất một dịch vụ."); return; }
         if (selectedServices.some(s => !s.scheduledTime)) { alert("Vui lòng chọn ngày giờ cho tất cả các dịch vụ đã chọn."); return; }
+        setIsConfirmModalOpen(true);
+    };
+
+    const handleConfirmOrder = async () => {
         setSubmitting(true);
         setError(null);
+        
         const orderPayload = {
             customerId: user.id,
             orderDate: getLocalISOString(new Date()),
@@ -182,9 +182,11 @@ const OrderPage = () => {
         try {
             const orderResponse = await createOrder(orderPayload);
             if (!orderResponse.isSuccess) throw new Error(orderResponse.message || "Tạo đơn hàng thất bại.");
+            
             const newOrderId = orderResponse.data.id;
             const paymentPayload = { orderId: newOrderId };
             const paymentResponse = await createPaymentUrl(paymentPayload);
+
             if (paymentResponse) {
                 clearCart();
                 window.location.href = paymentResponse;
@@ -194,6 +196,7 @@ const OrderPage = () => {
         } catch (err) {
             setError(err.message || "Đã có lỗi xảy ra trong quá trình đặt hàng.");
             setSubmitting(false);
+            setIsConfirmModalOpen(false);
         }
     };
 
@@ -269,11 +272,6 @@ const OrderPage = () => {
                         )}
                         {selectedServices.length > 0 && (
                             <div className="order-summary">
-                                {membership && membership.isActive && (
-                                    <div className="membership-info">
-                                        🎉 Chúc mừng! Bạn là thành viên <strong>{membership.membershipName}</strong>
-                                    </div>
-                                )}
                                 <div className="order-note">
                                     <label htmlFor="orderNote">Ghi chú cho đơn hàng:</label>
                                     <textarea
@@ -287,10 +285,10 @@ const OrderPage = () => {
                                         <span>Tổng dịch vụ:</span>
                                         <span className={discount > 0 ? 'total-price-original' : ''}>{formatCurrency(totalPrice)}</span>
                                     </p>
-                                    {discount > 0 && (
+                                    {membership && membership.isActive && discount > 0 && (
                                         <>
                                             <p className="discount-row">
-                                                <span>Ưu đãi thành viên ({membership.discountPercentage}%):</span>
+                                                <span>Ưu đãi thành viên <strong>{membership.membershipName}</strong> ({membership.discountPercentage}%):</span>
                                                 <span>- {formatCurrency(discount)}</span>
                                             </p>
                                             <p className="final-price-row">
@@ -303,7 +301,7 @@ const OrderPage = () => {
                                 {error && <p className="error-message">{error}</p>}
                                 <button
                                     className="btn-submit-order"
-                                    onClick={handleSubmitOrder}
+                                    onClick={handleOpenConfirmation}
                                     disabled={submitting}
                                 >
                                     {submitting ? 'Đang xử lý...' : 'Tiến hành Thanh toán'}
@@ -313,6 +311,15 @@ const OrderPage = () => {
                     </div>
                 </div>
             </div>
+
+            {isConfirmModalOpen && (
+                <ConfirmationModal
+                    orderDetails={{ selectedServices, totalPrice, discount, finalPrice, membership, note: orderNote }}
+                    onConfirm={handleConfirmOrder}
+                    onCancel={() => setIsConfirmModalOpen(false)}
+                    isSubmitting={submitting}
+                />
+            )}
         </div>
     );
 };
