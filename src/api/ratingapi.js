@@ -15,4 +15,14 @@ const submitRating = async (payload) => {
     }
 };
 
-export { submitRating };
+const getRatingsByServiceId = async (serviceId) => {
+    try {
+        const response = await apiClient.get(`/Rating/service/${serviceId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching ratings:", error);
+        throw error;
+    }
+};
+
+export { submitRating, getRatingsByServiceId };
