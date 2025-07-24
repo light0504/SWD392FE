@@ -44,7 +44,7 @@ const RatingModal = ({ orderDetail, onClose, onRatingSuccess }) => {
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="rating-modal-content" onClick={(e) => e.stopPropagation()}>
                 <button className="modal-close-btn" onClick={onClose}>×</button>
                 <h3>Đánh giá dịch vụ</h3>
                 <h4>{orderDetail.serviceName}</h4>

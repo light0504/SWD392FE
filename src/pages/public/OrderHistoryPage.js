@@ -116,7 +116,7 @@ const OrderHistoryPage = () => {
                                                                 {detail.status === COMPLETED_DETAIL_STATUS && !detail.rating && (
                                                                     <button className="btn-rate" onClick={() => handleOpenRatingModal(detail)}>Đánh giá</button>
                                                                 )}
-                                                                {detail.rating && <span className="rated-stars">{`★ ${detail.rating}`}</span>}
+                                                                {detail.rating && <span className="rated-stars">{`★ ${detail.rating.score}`}</span>}
                                                                 <span className={`status-badge status-${detailStatusInfo.class}`}>{detailStatusInfo.text}</span>
                                                             </div>
                                                         </div>

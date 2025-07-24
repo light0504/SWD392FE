@@ -1,0 +1,165 @@
+/* src/components/ConfirmationModal/ConfirmationModal.css */
+
+/* Kế thừa .modal-overlay từ file CSS toàn cục nếu có, hoặc định nghĩa lại ở đây */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+/* Đổi tên class để tránh xung đột với các modal khác */
+.confirmation-modal-content {
+    background: white;
+    padding: 2rem 2.5rem;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 700px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.confirmation-modal-content h3 {
+    margin-top: 0;
+    text-align: center;
+    font-size: 1.6rem;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.confirmation-intro {
+    text-align: center;
+    color: #6b7280;
+    margin-bottom: 2rem;
+    font-size: 1.05rem;
+}
+
+.confirmation-details h4 {
+    font-size: 1.1rem;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.confirmation-service-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px; /* Giới hạn chiều cao nếu danh sách quá dài */
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.confirmation-service-list li {
+    padding: 0.75rem 0;
+    border-bottom: 1px dotted #e5e7eb;
+}
+
+.confirmation-service-list li:last-child {
+    border-bottom: none;
+}
+
+.confirmation-service-list .service-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.confirmation-service-list .service-name {
+    font-weight: 600;
+    color: #111827;
+}
+
+.confirmation-service-list .service-time {
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.confirmation-note {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background-color: #f9fafb;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    font-size: 0.95rem;
+    color: #4b5563;
+}
+.confirmation-note strong {
+    color: #1f2937;
+}
+
+.confirmation-pricing {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e5e7eb;
+}
+
+.confirmation-pricing p {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.6rem 0;
+    font-size: 1rem;
+}
+
+.confirmation-pricing .discount {
+    color: #16a34a;
+}
+
+.confirmation-pricing .final-price {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 1rem;
+}
+
+.confirmation-pricing .final-price strong {
+    color: #dc3545;
+}
+
+/* Kế thừa .modal-actions từ file CSS toàn cục nếu có */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.modal-actions button {
+    flex: 1;             /* Cho phép cả hai nút co giãn bằng nhau */
+    max-width: 200px;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modal-actions .btn-cancel {
+    background-color: #6c757d;
+    color: white;
+}
+.modal-actions .btn-cancel:hover:not(:disabled) {
+    background-color: #5a6268;
+}
+
+.modal-actions .btn-confirm {
+    background-color: #28a745;
+    color: white;
+}
+.modal-actions .btn-confirm:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.modal-actions button:disabled {
+    background-color: #adb5bd;
+    cursor: not-allowed;
+}
