@@ -1,3 +1,25 @@
+/* --- DELETE CONFIRMATION MODAL --- */
+.modal-confirm {
+  background: #fff;
+  padding: 32px 36px 24px 36px;
+  border-radius: 12px;
+  /* box-shadow: 0 8px 32px rgba(231, 76, 60, 0.18); */
+  min-width: 320px;
+  max-width: 95vw;
+  width: 100%;
+  max-width: 400px;
+  animation: modalContentFadeIn 0.25s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.modal-confirm p {
+  color: #e74c3c;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
 /* --- STAFF MANAGEMENT PAGE --- */
 .content-box, .placeholder-content {
   background-color: white;
@@ -161,11 +183,43 @@
   padding: 32px 36px 24px 36px;
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-  min-width: 320px;
+  min-width: 480px;
   max-width: 95vw;
   width: 100%;
-  max-width: 420px;
+  max-width: 700px;
   animation: modalContentFadeIn 0.25s;
+}
+
+/* --- TWO COLUMN FORM LAYOUT --- */
+.two-col-form .form-cols {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.two-col-form .form-col {
+  flex: 1 1 0;
+  min-width: 200px;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.two-col-form label {
+  margin-bottom: 0.5rem;
+}
+@media (max-width: 900px) {
+  .staff-form {
+    min-width: 0;
+    max-width: 98vw;
+    padding: 18px 8px 12px 8px;
+  }
+  .two-col-form .form-cols {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .two-col-form .form-col {
+    max-width: 100%;
+  }
 }
 
 @keyframes modalContentFadeIn {
@@ -207,6 +261,7 @@
   gap: 10px;
 }
 .btn-save {
+  margin-top: 1.2rem;
   background-color: #ff9800;
   color: white;
   padding: 0.7rem 1.5rem;

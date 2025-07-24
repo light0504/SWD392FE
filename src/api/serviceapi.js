@@ -77,11 +77,28 @@ const getAllStaff = async () => {
   }
 };
 
+/**
+ * Cập nhật thông tin một dịch vụ.
+ * @param {object} serviceData - Dữ liệu dịch vụ cần cập nhật (bao gồm id, name, price, description, duration).
+ * @returns {Promise<object>} Kết quả trả về từ API.
+ */
+const updateService = async (serviceData) => {
+  try {
+    // PUT to /Service with full service object
+    const response = await apiClient.put('/Service', serviceData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating service:', error);
+    throw error;
+  }
+};
+
 
 export {
   getAllServices,
   getServiceById,
   createService,
+  updateService,
   deleteService,
   getAllStaff,
 };

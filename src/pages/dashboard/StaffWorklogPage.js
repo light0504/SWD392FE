@@ -6,6 +6,41 @@ import { ORDER_DETAIL_STATUS_MAP, getOrderDetailStatusInfo } from '../../constan
 import './DashboardPages.css';
 import './StaffWorklogPage.css';
 
+// Simple Modal Component
+const Modal = ({ open, title, message, input, inputValue, onInputChange, onClose, onConfirm, confirmText = 'Xác nhận', cancelText = 'Hủy' }) => {
+    if (!open) return null;
+    const isSuccess = title === 'Thành công';
+    return (
+        <div className="modal-overlay">
+            <div className="modal-box">
+                <h3 className="modal-title">{title}</h3>
+                <div className="modal-message">{message}</div>
+                {input && (
+                    <textarea
+                        className="modal-input"
+                        value={inputValue}
+                        onChange={e => onInputChange(e.target.value)}
+                        placeholder="Nhập ghi chú (nếu có)"
+                        rows={3}
+                        style={{ width: '100%', marginTop: 8 }}
+                    />
+                )}
+                <div className="modal-actions">
+                    {isSuccess ? (
+                        <button className="btn-action btn-confirm" onClick={onClose}>Đóng</button>
+                    ) : (
+                        <>
+                            <button className="btn-action btn-cancel" onClick={onClose}>{cancelText}</button>
+                            <button className="btn-action btn-confirm" onClick={onConfirm}>{confirmText}</button>
+                        </>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 const formatDate = (dateString) => new Date(dateString).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 const StaffWorklogPage = () => {
@@ -14,6 +49,8 @@ const StaffWorklogPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [statusFilter, setStatusFilter] = useState('pending');
+    // Modal state
+    const [modal, setModal] = useState({ open: false, title: '', message: '', input: false, inputValue: '', onConfirm: null });
 
     useEffect(() => {
         const fetchWorklog = async () => {
@@ -60,30 +97,80 @@ const StaffWorklogPage = () => {
         ));
     };
 
-    const handleStatusChange = async (task, newStatus, requiresNote = false) => {
-        let note = "";
-        
+    const handleStatusChange = (task, newStatus, requiresNote = false) => {
+        const statusText = ORDER_DETAIL_STATUS_MAP[newStatus]?.text.toLowerCase();
         if (requiresNote) {
-            note = window.prompt("Vui lòng nhập ghi chú hoàn thành (nếu có):");
-            if (note === null) return;
+            setModal({
+                open: true,
+                title: 'Hoàn thành công việc',
+                message: 'Vui lòng nhập ghi chú hoàn thành (nếu có):',
+                input: true,
+                inputValue: '',
+                onConfirm: async (note) => {
+                    try {
+                        const payload = {
+                            orderDetailId: task.id,
+                            newStatus: newStatus,
+                            note: note
+                        };
+                        await updateOrderDetailStatus(payload);
+                        updateTaskOnUI(task.id, newStatus, note);
+                        setModal({
+                            open: true,
+                            title: 'Thành công',
+                            message: 'Cập nhật trạng thái thành công!',
+                            input: false,
+                            inputValue: '',
+                            onConfirm: () => setModal(m => ({ ...m, open: false }))
+                        });
+                    } catch (err) {
+                        setModal({
+                            open: true,
+                            title: 'Lỗi',
+                            message: 'Cập nhật thất bại! Vui lòng thử lại.',
+                            input: false,
+                            inputValue: '',
+                            onConfirm: () => setModal(m => ({ ...m, open: false }))
+                        });
+                    }
+                }
+            });
         } else {
-            const statusText = ORDER_DETAIL_STATUS_MAP[newStatus]?.text.toLowerCase();
-            if (!window.confirm(`Bạn có chắc muốn chuyển trạng thái công việc thành "${statusText}" không?`)) {
-                return;
-            }
-        }
-
-        try {
-            const payload = {
-                orderDetailId: task.id,
-                newStatus: newStatus,
-                note: note
-            };
-            await updateOrderDetailStatus(payload);
-            updateTaskOnUI(task.id, newStatus, note);
-            alert("Cập nhật trạng thái thành công!");
-        } catch (err) {
-            alert("Cập nhật thất bại! Vui lòng thử lại.");
+            setModal({
+                open: true,
+                title: 'Xác nhận',
+                message: `Bạn có chắc muốn chuyển trạng thái công việc thành "${statusText}" không?`,
+                input: false,
+                inputValue: '',
+                onConfirm: async () => {
+                    try {
+                        const payload = {
+                            orderDetailId: task.id,
+                            newStatus: newStatus,
+                            note: ''
+                        };
+                        await updateOrderDetailStatus(payload);
+                        updateTaskOnUI(task.id, newStatus, '');
+                        setModal({
+                            open: true,
+                            title: 'Thành công',
+                            message: 'Cập nhật trạng thái thành công!',
+                            input: false,
+                            inputValue: '',
+                            onConfirm: () => setModal(m => ({ ...m, open: false }))
+                        });
+                    } catch (err) {
+                        setModal({
+                            open: true,
+                            title: 'Lỗi',
+                            message: 'Cập nhật thất bại! Vui lòng thử lại.',
+                            input: false,
+                            inputValue: '',
+                            onConfirm: () => setModal(m => ({ ...m, open: false }))
+                        });
+                    }
+                }
+            });
         }
     };
 
@@ -105,7 +192,9 @@ const StaffWorklogPage = () => {
                 );
             case IN_PROGRESS:
                 return (
-                    <button className="btn-action btn-complete" onClick={() => handleStatusChange(task, COMPLETED, true)}>Hoàn thành</button>
+                    <div>
+                        <button className="btn-action btn-complete" onClick={() => handleStatusChange(task, COMPLETED, true)}>Hoàn thành</button>
+                    </div>
                 );
             default:
                 return null;
@@ -158,6 +247,27 @@ const StaffWorklogPage = () => {
                 </div>
                 {renderContent()}
             </div>
+            {/* Modal for confirm/note/notice */}
+            <Modal
+                open={modal.open}
+                title={modal.title}
+                message={modal.message}
+                input={modal.input}
+                inputValue={modal.inputValue}
+                onInputChange={val => setModal(m => ({ ...m, inputValue: val }))}
+                onClose={() => setModal(m => ({ ...m, open: false }))}
+                onConfirm={() => {
+                    if (modal.input) {
+                        modal.onConfirm && modal.onConfirm(modal.inputValue);
+                        setModal(m => ({ ...m, open: false }));
+                    } else {
+                        modal.onConfirm && modal.onConfirm();
+                        setModal(m => ({ ...m, open: false }));
+                    }
+                }}
+                confirmText={modal.input ? 'Hoàn thành' : 'Xác nhận'}
+                cancelText="Hủy"
+            />
         </div>
     );
 };
