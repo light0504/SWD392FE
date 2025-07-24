@@ -14,6 +14,7 @@ import ProfilePage from '../pages/public/ProfilePage';
 import OrderHistoryPage from '../pages/public/OrderHistoryPage';
 import OrderPage from '../pages/public/OrderPage';
 import OrderSuccessPage from '../pages/public/OrderSuccessPage';
+import MembershipSuccessPage from '../pages/public/MembershipSuccessPage';
 
 // Dashboard Pages
 import DashboardHomePage from '../pages/dashboard/DashboardHomePage';
@@ -54,6 +55,7 @@ const AppRouter = () => {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/order" element={<OrderPage />} />
         <Route path="/membership" element={<MembershipPage />} />
+        <Route path="/membership-success" element={<MembershipSuccessPage />} />
         {/* Thêm các trang khác cho người dùng ở đây, ví dụ: /profile */}
       {/* </Route> */}
 
