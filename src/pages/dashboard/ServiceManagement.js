@@ -77,7 +77,7 @@ const ServiceManagement = () => {
 
     const handleCreateService = async (e) => {
         e.preventDefault();
-        if (!newService.name || !newService.price || !newService.duration) {
+        if (!newService.name || !newService.price || !newService.duration || !newService.description) {
             setModal({
                 open: true,
                 title: 'Thiếu thông tin',
@@ -288,7 +288,7 @@ const ServiceManagement = () => {
                                 <input type="number" id="edit-duration" name="duration" value={editService.duration} onChange={e => setEditService({ ...editService, duration: e.target.value })} required min="0" />
                             </div>
                             <div className="form-group">
-                                <label htmlFor="edit-description">Mô tả</label>
+                                <label htmlFor="edit-description">Mô tả *</label>
                                 <textarea id="edit-description" name="description" value={editService.description} onChange={e => setEditService({ ...editService, description: e.target.value })} rows="4"></textarea>
                             </div>
                             <div className="modal-actions">
