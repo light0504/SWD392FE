@@ -182,7 +182,13 @@ export default function ProfilePage() {
                 <ViewField label="Họ và Tên" value={`${currentUser?.lastName} ${currentUser?.firstName}`} />
                 <ViewField label="Email" value={currentUser?.email} />
                 <ViewField label="Số điện thoại" value={currentUser?.phone || 'Chưa có'} />
-                <ViewField label="Giới tính" value={genderMap[currentUser?.gender] || 'Chưa có'} />
+                <ViewField label="Giới tính" value={
+                  genderMap[
+                    typeof currentUser?.gender === 'string'
+                      ? genderMap[currentUser.gender]
+                      : currentUser?.gender
+                  ] || 'Chưa có'
+                } />
                 <ViewField label="Địa chỉ" value={currentUser?.address || 'Chưa có'} />
                 <button className="edit-button" onClick={() => setIsEditing(true)}>Sửa</button>
               </>
