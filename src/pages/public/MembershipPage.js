@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { getAllMemberships, getMembershipByCustomer, createMembershipOrder } from '../../api/membershipAPI';
+import { getAllMemberships, getMembershipByCustomer, createMembershipOrder, deactivateMembership } from '../../api/membershipAPI';
 import { createPaymentURL } from '../../api/payAPI';
 import './MembershipPage.css';
 
@@ -40,10 +40,8 @@ const MembershipPage = () => {
       if (user && user.id) {
         try {
           const res = await getMembershipByCustomer(user.id);
-          const memberships = Array.isArray(res?.data) ? res.data : [];
-          // Find active membership, or first if none active
-          const activeMembership = memberships.find(m => m.isActive) || memberships[0] || null;
-          setUserMembership(activeMembership);
+          // API now returns a single object or null
+          setUserMembership(res?.data || null);
         } catch {
           setUserMembership(null);
         }
@@ -59,9 +57,9 @@ const MembershipPage = () => {
       navigate('/login');
       return;
     }
-    // Không cho mua nếu đã có membership khác basic
-    if (userMembership && userMembership.membershipName && userMembership.membershipName.toLowerCase() !== 'basic') {
-      setNoticeModal({ open: true, message: `Bạn đang sử dụng gói: ${userMembership.membershipName}. Không thể mua gói mới khi chưa hết hạn.` });
+    // Không cho mua nếu đã có membership đang active và khác basic
+    if (userMembership && userMembership.isActive && userMembership.membershipName && userMembership.membershipName.toLowerCase() !== 'basic') {
+      setNoticeModal({ open: true, message: `Bạn đang sử dụng gói: ${userMembership.membershipName}. Không thể mua gói mới khi chưa hết hạn.`, showUpgrade: true, pendingMembership: membership });
       return;
     }
     // Hiển thị modal xác nhận trước khi mua
@@ -99,7 +97,19 @@ const MembershipPage = () => {
   };
 
   const handleCloseNoticeModal = () => {
-    setNoticeModal({ open: false, message: '' });
+    setNoticeModal({ open: false, message: '', showUpgrade: false, pendingMembership: null });
+  };
+
+  const handleDeactivateAndUpgrade = async () => {
+    if (!userMembership || !userMembership.id || !noticeModal.pendingMembership) return;
+    try {
+      await deactivateMembership(userMembership.id);
+      setNoticeModal({ open: false, message: '', showUpgrade: false, pendingMembership: null });
+      // Reload the page to ensure all state is refreshed
+      window.location.reload();
+    } catch {
+      setNoticeModal({ open: true, message: 'Không thể hủy gói thành viên hiện tại.', showUpgrade: false, pendingMembership: null });
+    }
   };
 
   if (loading) return <div className="page-loading">Đang tải danh sách gói thành viên...</div>;
@@ -130,6 +140,20 @@ const MembershipPage = () => {
           </div>
         ))}
       </div>
+      {noticeModal.open && (
+        <div className="modal-overlay">
+          <div className="notice-modal-content">
+            <h2>Thông báo</h2>
+            <p>{noticeModal.message}</p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button className="btn-cancel" onClick={handleCloseNoticeModal}>Đóng</button>
+              {noticeModal.showUpgrade && (
+                <button className="btn-buy-membership" onClick={handleDeactivateAndUpgrade}>Hủy và nâng cấp</button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       {confirmModal.open && confirmModal.membership && (
         <div className="modal-overlay">
           <div className="notice-modal-content">
@@ -139,15 +163,6 @@ const MembershipPage = () => {
               <button className="btn-buy-membership" onClick={handleConfirmBuy}>Xác nhận</button>
               <button className="btn-cancel" onClick={handleCloseConfirmModal}>Hủy</button>
             </div>
-          </div>
-        </div>
-      )}
-      {noticeModal.open && (
-        <div className="modal-overlay">
-          <div className="notice-modal-content">
-            <h2>Thông báo</h2>
-            <p>{noticeModal.message}</p>
-            <button className="btn-cancel" onClick={handleCloseNoticeModal}>Đóng</button>
           </div>
         </div>
       )}

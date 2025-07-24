@@ -58,8 +58,10 @@ export default function ProfilePage() {
     const fetchMemberships = async () => {
       try {
         const res = await getMembershipByCustomer(user.id);
-        if (res?.isSuccess && Array.isArray(res.data)) {
-          setMemberships(res.data);
+        if (res?.isSuccess && res.data) {
+          setMemberships([res.data]);
+        } else {
+          setMemberships([]);
         }
       } catch {
         setMemberships([]);
