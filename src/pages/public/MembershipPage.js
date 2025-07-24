@@ -10,6 +10,7 @@ const MembershipPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [noticeModal, setNoticeModal] = useState({ open: false, message: '' });
+  const [confirmModal, setConfirmModal] = useState({ open: false, membership: null });
   const [userMembership, setUserMembership] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -63,6 +64,14 @@ const MembershipPage = () => {
       setNoticeModal({ open: true, message: `Bạn đang sử dụng gói: ${userMembership.membershipName}. Không thể mua gói mới khi chưa hết hạn.` });
       return;
     }
+    // Hiển thị modal xác nhận trước khi mua
+    setConfirmModal({ open: true, membership });
+  };
+
+  const handleConfirmBuy = async () => {
+    const membership = confirmModal.membership;
+    if (!membership || !user) return;
+    setConfirmModal({ open: false, membership: null });
     try {
       // Tạo order mua membership
       const orderRes = await createMembershipOrder(user.id, membership.id);
@@ -83,6 +92,10 @@ const MembershipPage = () => {
     } catch (err) {
       setNoticeModal({ open: true, message: 'Lỗi khi tạo thanh toán.' });
     }
+  };
+
+  const handleCloseConfirmModal = () => {
+    setConfirmModal({ open: false, membership: null });
   };
 
   const handleCloseNoticeModal = () => {
@@ -117,6 +130,18 @@ const MembershipPage = () => {
           </div>
         ))}
       </div>
+      {confirmModal.open && confirmModal.membership && (
+        <div className="modal-overlay">
+          <div className="notice-modal-content">
+            <h2>Xác nhận mua gói thành viên</h2>
+            <p>Bạn có chắc chắn muốn mua gói <strong>{confirmModal.membership.name}</strong> với giá <strong>{confirmModal.membership.price.toLocaleString('vi-VN')}đ</strong>?</p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              <button className="btn-buy-membership" onClick={handleConfirmBuy}>Xác nhận</button>
+              <button className="btn-cancel" onClick={handleCloseConfirmModal}>Hủy</button>
+            </div>
+          </div>
+        </div>
+      )}
       {noticeModal.open && (
         <div className="modal-overlay">
           <div className="notice-modal-content">
