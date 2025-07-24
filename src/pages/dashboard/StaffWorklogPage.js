@@ -176,14 +176,12 @@ const StaffWorklogPage = () => {
 
     const renderTaskActions = (task) => {
         const PENDING = 0;
-        const CONFIRMED = 1;
-        const IN_PROGRESS = 2;
-        const COMPLETED = 3;
-        const CANCELLED = 4;
+        const IN_PROGRESS = 1;
+        const COMPLETED = 2;
+        const CANCELLED = 3;
 
         switch (task.status) {
             case PENDING:
-            case CONFIRMED:
                 return (
                     <>
                         <button className="btn-action btn-cancel" onClick={() => handleStatusChange(task, CANCELLED)}>Hủy</button>

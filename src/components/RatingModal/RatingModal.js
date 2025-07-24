@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import './RatingModal.css';
-import { submitRating } from '../../api/ratingapi'; // Import từ file API mới
+import { submitRating } from '../../api/ratingapi';
 
 const RatingModal = ({ orderDetail, onClose, onRatingSuccess }) => {
     const [score, setScore] = useState(0);
+    const [hoverScore, setHoverScore] = useState(0); // <-- State mới để xử lý hover
     const [comment, setComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
@@ -18,19 +19,17 @@ const RatingModal = ({ orderDetail, onClose, onRatingSuccess }) => {
         setError(null);
 
         try {
-            console.log(orderDetail);
-            console.log("Submitting rating with score:", score, "and comment:", comment);
             const payload = {
-                orderDetailId: orderDetail.id, // Giả sử API trả về trường này
+                orderDetailId: orderDetail.id,
                 score: score,
                 comment: comment,
             };
-            console.log("Submitting rating with payload:", payload);
+            
             const response = await submitRating(payload);
-            console.log("Rating response:", response);
+            
             if (response.isSuccess) {
                 alert("Cảm ơn bạn đã đánh giá dịch vụ!");
-                onRatingSuccess(orderDetail.orderDetailId, score); // Cập nhật UI ở trang cha
+                onRatingSuccess(orderDetail.id, { score: score, comment: comment });
                 onClose();
             } else {
                 throw new Error(response.message || "Gửi đánh giá thất bại.");
@@ -43,21 +42,23 @@ const RatingModal = ({ orderDetail, onClose, onRatingSuccess }) => {
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <button className="modal-close-btn" onClick={onClose}>×</button>
-                <h3>Đánh giá dịch vụ</h3>
-                <h4>{orderDetail.serviceName}</h4>
+        <div className="ratingModal-overlay" onClick={onClose}>
+            <div className="ratingModal-content" onClick={(e) => e.stopPropagation()}>
+                <button className="ratingModal-closeBtn" onClick={onClose}>×</button>
+                <h3 className="ratingModal-title">Đánh giá dịch vụ</h3>
+                <h4 className="ratingModal-serviceName">{orderDetail.serviceName}</h4>
                 
-                <form onSubmit={handleSubmit}>
-                    <div className="star-rating">
+                <form className="ratingModal-form" onSubmit={handleSubmit}>
+                    <div className="ratingModal-starContainer">
                         {[...Array(5)].map((_, index) => {
                             const ratingValue = index + 1;
                             return (
                                 <span 
                                     key={ratingValue}
-                                    className={ratingValue <= score ? 'star selected' : 'star'}
+                                    className={`ratingModal-star ${ratingValue <= (hoverScore || score) ? 'is-active' : ''}`}
                                     onClick={() => setScore(ratingValue)}
+                                    onMouseEnter={() => setHoverScore(ratingValue)}
+                                    onMouseLeave={() => setHoverScore(0)}
                                 >
                                     ★
                                 </span>
@@ -66,15 +67,16 @@ const RatingModal = ({ orderDetail, onClose, onRatingSuccess }) => {
                     </div>
                     
                     <textarea
+                        className="ratingModal-comment"
                         rows="4"
                         placeholder="Chia sẻ cảm nhận của bạn về dịch vụ..."
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
                     ></textarea>
 
-                    {error && <p className="error-message modal-error">{error}</p>}
+                    {error && <p className="ratingModal-error">{error}</p>}
 
-                    <button type="submit" className="btn-submit-rating" disabled={isSubmitting}>
+                    <button type="submit" className="ratingModal-submitBtn" disabled={isSubmitting}>
                         {isSubmitting ? 'Đang gửi...' : 'Gửi Đánh Giá'}
                     </button>
                 </form>
