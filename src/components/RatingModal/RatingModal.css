@@ -1,30 +1,107 @@
-.modal-overlay {
+/* src/components/RatingModal/RatingModal.css */
+
+.ratingModal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.7);
     display: flex; justify-content: center; align-items: center;
     z-index: 1000;
+    padding: 1rem;
+    backdrop-filter: blur(4px);
 }
-.modal-content {
-    background: white; padding: 2rem; border-radius: 8px;
-    width: 90%; max-width: 450px; position: relative;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+
+.ratingModal-content {
+    background: white;
+    padding: 2rem 2.5rem;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-.modal-close-btn {
+
+@keyframes zoomIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.ratingModal-closeBtn {
     position: absolute; top: 10px; right: 15px;
-    background: none; border: none; font-size: 1.8rem;
-    cursor: pointer; color: #aaa;
+    background: #f1f3f5; border: none; font-size: 1.2rem;
+    line-height: 1; width: 32px; height: 32px;
+    border-radius: 50%; cursor: pointer; color: #6c757d;
+    transition: background-color 0.2s, color 0.2s;
 }
-.modal-content h3 { margin-top: 0; text-align: center; }
-.modal-content h4 { text-align: center; color: #007bff; font-weight: 500; }
+.ratingModal-closeBtn:hover {
+    background-color: #e9ecef;
+    color: #212529;
+}
 
-.star-rating { display: flex; justify-content: center; margin: 1.5rem 0; }
-.star { font-size: 2.8rem; color: #ccc; cursor: pointer; transition: color 0.2s, transform 0.1s; }
-.star:hover { transform: scale(1.1); }
-.star.selected { color: #f9c74f; }
-.star:hover ~ .star { color: #ccc; } /* Hiệu ứng hover ngược */
-.star-rating:hover .star { color: #f9c74f; }
+.ratingModal-title {
+    margin-top: 0; margin-bottom: 0.5rem; text-align: center;
+    font-size: 1.8rem; color: #212529; font-weight: 700;
+}
 
-.modal-content textarea { width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; resize: vertical; margin-bottom: 1rem; }
-.btn-submit-rating { width: 100%; padding: 0.8rem; background-color: #28a745; color: white; border: none; border-radius: 5px; font-weight: 600; cursor: pointer; }
-.btn-submit-rating:disabled { background-color: #aaa; }
-.modal-error { color: #dc3545; font-size: 0.9rem; text-align: center; margin-bottom: 1rem; }
+.ratingModal-serviceName {
+    text-align: center; display: block;
+    color: #007bff; font-weight: 500; font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.ratingModal-form { /* ... */ }
+
+/* === HIỆU ỨNG NGÔI SAO ĐÃ ĐƯỢC SỬA LẠI === */
+.ratingModal-starContainer {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    /* Không cần direction: rtl nữa */
+}
+
+.ratingModal-star {
+    font-size: 3rem;
+    color: #e4e5e9; /* Màu sao mặc định */
+    cursor: pointer;
+    transition: color 0.2s, transform 0.1s;
+}
+
+/* Chỉ cần một class duy nhất để tô màu */
+.ratingModal-star.is-active {
+    color: #f5b32e; /* Màu vàng cam */
+}
+
+.ratingModal-star:hover {
+    transform: scale(1.1);
+}
+
+.ratingModal-star:active {
+    transform: scale(0.9);
+}
+
+/* ==================================== */
+
+.ratingModal-comment {
+    width: 100%; padding: 0.8rem 1rem; border: 1px solid #ced4da;
+    border-radius: 6px; box-sizing: border-box; resize: vertical;
+    margin-bottom: 1.5rem; font-family: inherit; font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.ratingModal-comment:focus {
+    outline: none; border-color: #80bdff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+}
+
+.ratingModal-submitBtn {
+    width: 100%; padding: 0.9rem; background-color: #28a745;
+    color: white; border: none; border-radius: 6px;
+    font-weight: 600; font-size: 1.1rem; cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+.ratingModal-submitBtn:hover:not(:disabled) { background-color: #218838; }
+.ratingModal-submitBtn:active:not(:disabled) { transform: scale(0.98); }
+.ratingModal-submitBtn:disabled { background-color: #6c757d; cursor: not-allowed; }
+
+.ratingModal-error {
+    color: #dc3545; font-size: 0.9rem; text-align: center;
+    margin-top: -0.5rem; margin-bottom: 1rem;
+}

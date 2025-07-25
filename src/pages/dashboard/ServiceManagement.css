@@ -144,7 +144,7 @@ table tbody tr:hover {
   padding: 15px;
 }
 
-.modal-content {
+.service-management-modal-content {
   background: white;
   padding: 25px 30px;
   border-radius: 8px;
@@ -154,7 +154,7 @@ table tbody tr:hover {
   animation: fadeIn 0.3s;
 }
 
-.modal-content h2 {
+.service-management-modal-content h2 {
   font-size: 1.5rem;
   color: var(--dark-color);
   margin-top: 0;

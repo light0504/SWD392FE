@@ -8,7 +8,7 @@ import './OrderHistoryPage.css';
 
 const formatDate = (dateString) => new Date(dateString).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-const COMPLETED_DETAIL_STATUS = 3; // 'Completed' của OrderDetail là 3
+const COMPLETED_DETAIL_STATUS = 2; // Sửa lại theo mapping của bạn
 
 const OrderHistoryPage = () => {
     const navigate = useNavigate();
@@ -22,7 +22,7 @@ const OrderHistoryPage = () => {
     const [selectedDetailForRating, setSelectedDetailForRating] = useState(null);
 
     useEffect(() => {
-        if(!user){
+        if (!user) {
             navigate("/");
             return;
         }
@@ -32,18 +32,18 @@ const OrderHistoryPage = () => {
             try {
                 const response = await getOrderHistory(user.id);
                 if (response.isSuccess) {
-                    console.log("Order history fetched successfully:", response.data);
                     setOrders(response.data.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate)));
                 } else { 
                     setError(response.message || 'Lỗi tải lịch sử đơn hàng.'); 
                 }
-            }catch (err) {
-            if (err.response?.status === 404 || err.response?.status === 400) {
-                setError('Không có đơn hàng.');
-            } else {
-                setError('Lỗi tải lịch sử đơn hàng.');
-            }
-            }finally { 
+            } catch (err) {
+                if (err.response?.status === 404 || err.response?.status === 400) {
+                    // Không set lỗi mà chỉ hiển thị mảng rỗng
+                    setOrders('Khong có đơn hàng nào.');
+                } else {
+                    setError('Lỗi tải lịch sử đơn hàng.');
+                }
+            } finally { 
                 setLoading(false); 
             }
         };
@@ -57,15 +57,21 @@ const OrderHistoryPage = () => {
     }, [orders, activeFilter]);
     
     const toggleDetails = (orderId) => setExpandedOrderId(prevId => (prevId === orderId ? null : orderId));
+    
     const handleOpenRatingModal = (detail) => {
         setSelectedDetailForRating(detail);
         setIsRatingModalOpen(true);
     };
-    const handleRatingSuccess = (orderDetailId, newScore) => {
+
+    const handleRatingSuccess = (orderDetailId, newRatingObject) => {
         setOrders(prevOrders => prevOrders.map(order => ({
             ...order,
             orderDetails: order.orderDetails.map(detail =>
-                detail.id === orderDetailId ? { ...detail, rating: newScore } : detail
+                // So sánh bằng `id`
+                detail.id === orderDetailId 
+                    // Gán toàn bộ object rating mới
+                    ? { ...detail, rating: newRatingObject } 
+                    : detail
             )
         })));
     };
@@ -116,7 +122,8 @@ const OrderHistoryPage = () => {
                                                                 {detail.status === COMPLETED_DETAIL_STATUS && !detail.rating && (
                                                                     <button className="btn-rate" onClick={() => handleOpenRatingModal(detail)}>Đánh giá</button>
                                                                 )}
-                                                                {detail.rating && <span className="rated-stars">{`★ ${detail.rating}`}</span>}
+                                                                {/* Hiển thị điểm số từ object rating */}
+                                                                {detail.rating && <span className="rated-stars">{`★ ${detail.rating.score}`}</span>}
                                                                 <span className={`status-badge status-${detailStatusInfo.class}`}>{detailStatusInfo.text}</span>
                                                             </div>
                                                         </div>
@@ -139,14 +146,14 @@ const OrderHistoryPage = () => {
                             );
                         })}
                     </div>
-                ) : ( <p className="empty-message">Không có đơn hàng nào phù hợp.</p> )}
+                ) : ( <p className="empty-message">Bạn không có đơn hàng nào.</p> )}
             </>
         );
     };
 
     return (
         <div className="user-page-container">
-            <div className="order-container">
+            <div className="container">
                 <h1 className="page-title">Lịch Sử Đơn Hàng</h1>
                 <p className="page-subtitle">Xem lại và quản lý các dịch vụ bạn đã đặt.</p>
                 <div className="content-box">{renderContent()}</div>

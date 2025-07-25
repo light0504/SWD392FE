@@ -15,10 +15,14 @@ const StaffManagement = () => {
     const [showForm, setShowForm] = useState(false);
     const [formType, setFormType] = useState('add'); // 'add' or 'edit'
     const [formData, setFormData] = useState({
-        fullName: '',
         email: '',
+        password: '',
+        firstName: '',
+        lastName: '',
+        gender: '',
         salary: '',
         hireDate: '',
+        imgURL: '',
         note: ''
     });
     const [editId, setEditId] = useState(null);
@@ -66,7 +70,17 @@ const StaffManagement = () => {
 
     const handleAddClick = () => {
         setFormType('add');
-        setFormData({ fullName: '', email: '', salary: '', hireDate: '', note: '' });
+        setFormData({
+            email: '',
+            password: '',
+            firstName: '',
+            lastName: '',
+            gender: '',
+            salary: '',
+            hireDate: '',
+            imgURL: '',
+            note: ''
+        });
         setShowForm(true);
         setEditId(null);
     };
@@ -74,27 +88,45 @@ const StaffManagement = () => {
     const handleEditClick = (staff) => {
         setFormType('edit');
         setFormData({
-            fullName: staff.fullName || '',
             email: staff.email || '',
+            password: '', // leave blank for update
+            firstName: staff.firstName || '',
+            lastName: staff.lastName || '',
+            gender: staff.gender || '',
             salary: staff.salary || '',
             hireDate: staff.hireDate ? staff.hireDate.slice(0, 10) : '',
+            imgURL: staff.imgURL || '',
             note: staff.note || ''
         });
         setEditId(staff.id);
         setShowForm(true);
     };
 
-    const handleDeleteClick = async (id) => {
-        if (!window.confirm('Bạn có chắc muốn xóa nhân viên này?')) return;
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteId, setDeleteId] = useState(null);
+
+    const handleDeleteClick = (id) => {
+        setDeleteId(id);
+        setShowDeleteModal(true);
+    };
+
+    const handleConfirmDelete = async () => {
         setLoading(true);
+        setShowDeleteModal(false);
         try {
-            await deleteStaff(id);
+            await deleteStaff(deleteId);
             fetchStaff();
         } catch (err) {
             setError('Xóa nhân viên thất bại.');
         } finally {
             setLoading(false);
+            setDeleteId(null);
         }
+    };
+
+    const handleCancelDelete = () => {
+        setShowDeleteModal(false);
+        setDeleteId(null);
     };
 
     const handleFormSubmit = async (e) => {
@@ -102,10 +134,31 @@ const StaffManagement = () => {
         setLoading(true);
         setError(null);
         try {
+            let reqBody;
             if (formType === 'add') {
-                await createStaff(formData);
+                reqBody = {
+                    email: formData.email,
+                    password: formData.password,
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    gender: formData.gender,
+                    salary: Number(formData.salary),
+                    hireDate: formData.hireDate,
+                    imgURL: formData.imgURL,
+                    note: formData.note
+                };
+                await createStaff(reqBody);
             } else if (formType === 'edit' && editId) {
-                await updateStaff(editId, formData);
+                reqBody = {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    gender: formData.gender,
+                    salary: Number(formData.salary),
+                    hireDate: formData.hireDate,
+                    imgURL: formData.imgURL,
+                    note: formData.note
+                };
+                await updateStaff(editId, reqBody);
             }
             setShowForm(false);
             fetchStaff();
@@ -205,23 +258,48 @@ const StaffManagement = () => {
 
             {showForm && (
                 <div className="modal-overlay">
-                    <form className="staff-form" onSubmit={handleFormSubmit}>
+                    <form className="staff-form two-col-form" onSubmit={handleFormSubmit}>
                         <h3>{formType === 'add' ? 'Thêm nhân viên' : 'Sửa nhân viên'}</h3>
-                        <label>Họ tên
-                            <input name="fullName" value={formData.fullName} onChange={handleInputChange} required />
-                        </label>
-                        <label>Email
-                            <input name="email" value={formData.email} onChange={handleInputChange} required type="email" />
-                        </label>
-                        <label>Lương
-                            <input name="salary" value={formData.salary} onChange={handleInputChange} required type="number" min="0" />
-                        </label>
-                        <label>Ngày vào làm
-                            <input name="hireDate" value={formData.hireDate} onChange={handleInputChange} required type="date" />
-                        </label>
-                        <label>Ghi chú
-                            <input name="note" value={formData.note} onChange={handleInputChange} />
-                        </label>
+                        <div className="form-cols">
+                            <div className="form-col">
+                                <label>Email
+                                    <input name="email" value={formData.email} onChange={handleInputChange} required type="email" />
+                                </label>
+                                {formType === 'add' && (
+                                    <label>Mật khẩu
+                                        <input name="password" value={formData.password} onChange={handleInputChange} required type="password" />
+                                    </label>
+                                )}
+                                <label>Họ
+                                    <input name="lastName" value={formData.lastName} onChange={handleInputChange} required />
+                                </label>
+                                <label>Tên
+                                    <input name="firstName" value={formData.firstName} onChange={handleInputChange} required />
+                                </label>
+                                <label>Giới tính
+                                    <select name="gender" value={formData.gender} onChange={handleInputChange} required>
+                                        <option value="">Chọn giới tính</option>
+                                        <option value="Nam">Nam</option>
+                                        <option value="Nữ">Nữ</option>
+                                        <option value="Khác">Khác</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <div className="form-col">
+                                <label>Lương
+                                    <input name="salary" value={formData.salary} onChange={handleInputChange} required type="number" min="0" />
+                                </label>
+                                <label>Ngày vào làm
+                                    <input name="hireDate" value={formData.hireDate} onChange={handleInputChange} required type="date" />
+                                </label>
+                                <label>Ảnh đại diện (URL)
+                                    <input name="imgURL" value={formData.imgURL} onChange={handleInputChange} type="text" />
+                                </label>
+                                <label>Ghi chú
+                                    <input name="note" value={formData.note} onChange={handleInputChange} />
+                                </label>
+                            </div>
+                        </div>
                         <div className="form-actions">
                             <button type="submit" className="btn-save">Lưu</button>
                             <button type="button" className="btn-cancel" onClick={() => setShowForm(false)}>Hủy</button>
@@ -254,6 +332,18 @@ const StaffManagement = () => {
                             <button type="button" className="btn-cancel" onClick={() => setShowFilter(false)}>Hủy</button>
                         </div>
                     </form>
+                </div>
+            )}
+            {/* Delete confirmation modal */}
+            {showDeleteModal && (
+                <div className="modal-overlay">
+                    <div className="modal-confirm">
+                        <p>Bạn có chắc muốn xóa nhân viên này?</p>
+                        <div className="form-actions">
+                            <button className="btn-save" onClick={handleConfirmDelete} disabled={loading}>Xóa</button>
+                            <button className="btn-cancel" onClick={handleCancelDelete} disabled={loading}>Hủy</button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

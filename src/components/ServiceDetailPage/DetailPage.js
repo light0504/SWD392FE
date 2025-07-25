@@ -166,7 +166,7 @@ const DetailPage = () => {
                   addToCart(service);
                   closeCart();
                 }}
-                className="btn-add-to-cart"
+                className="btn-add-to-cart-detail-page"
               >
                 <span className="cart-icon">🛒</span>
                 Thêm vào giỏ hàng
