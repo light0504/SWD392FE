@@ -1,47 +1,69 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect} from 'react';
 
 // Tạo Context
 const CartContext = createContext();
 
 // Tạo Provider Component
-const CartProvider = ({ children }) => {
+export const CartProvider = ({ children }) => {
     // State chính để lưu trữ các dịch vụ trong giỏ
-    const [cartItems, setCartItems] = useState([]);
+    const [cartItems, setCartItems] = useState(() => {
+        // Khởi tạo state trực tiếp từ localStorage để tránh "nhấp nháy" (flickering)
+        try {
+            const savedCart = localStorage.getItem('cartItems');
+            return savedCart ? JSON.parse(savedCart) : [];
+        } catch (error) {
+            console.error("Failed to parse initial cart items from localStorage", error);
+            return [];
+        }
+    });
+
     // State để quản lý việc mở/đóng sidebar giỏ hàng
     const [isCartOpen, setIsCartOpen] = useState(false);
 
-    // Sử dụng useEffect để tải giỏ hàng từ localStorage khi ứng dụng khởi động
+    // --- EFFECT MỚI: LẮNG NGHE SỰ THAY ĐỔI TỪ CÁC TAB KHÁC ---
     useEffect(() => {
-        try {
-            const savedCart = localStorage.getItem('cartItems');
-            if (savedCart) {
-                setCartItems(JSON.parse(savedCart));
+        const handleStorageChange = (event) => {
+            // Chỉ xử lý khi 'cartItems' bị thay đổi
+            if (event.key === 'cartItems') {
+                try {
+                    // Cập nhật state của tab hiện tại với dữ liệu mới từ localStorage
+                    const newCartItems = event.newValue ? JSON.parse(event.newValue) : [];
+                    setCartItems(newCartItems);
+                } catch (error) {
+                    console.error("Failed to parse updated cart items from storage event", error);
+                }
             }
-        } catch (error) {
-            console.error("Failed to parse cart items from localStorage", error);
-        }
-    }, []);
+        };
+
+        // Đăng ký lắng nghe sự kiện 'storage'
+        window.addEventListener('storage', handleStorageChange);
+
+        // Dọn dẹp: Gỡ bỏ lắng nghe sự kiện khi component bị unmount
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, []); // Mảng phụ thuộc rỗng đảm bảo effect chỉ chạy một lần
+
 
     // Sử dụng useEffect để lưu giỏ hàng vào localStorage mỗi khi nó thay đổi
     useEffect(() => {
-        localStorage.setItem('cartItems', JSON.stringify(cartItems));
+        try {
+            localStorage.setItem('cartItems', JSON.stringify(cartItems));
+        } catch (error) {
+            console.error("Failed to save cart items to localStorage", error);
+        }
     }, [cartItems]);
 
     // --- CÁC HÀM XỬ LÝ GIỎ HÀNG ---
-
     const addToCart = (service) => {
         setCartItems(prevItems => {
-            // Kiểm tra xem dịch vụ đã có trong giỏ chưa
             const isItemInCart = prevItems.find(item => item.id === service.id);
             if (isItemInCart) {
-                // Nếu đã có, có thể bạn muốn tăng số lượng, nhưng ở đây ta chỉ cần thông báo
                 alert(`${service.name} đã có trong giỏ hàng.`);
                 return prevItems;
             }
-            // Nếu chưa có, thêm vào giỏ
             return [...prevItems, service];
         });
-        // Tự động mở giỏ hàng khi thêm sản phẩm mới
         openCart();
     };
 
@@ -49,17 +71,15 @@ const CartProvider = ({ children }) => {
         setCartItems(prevItems => prevItems.filter(item => item.id !== serviceId));
     };
 
-    // --- HÀM MỚI ĐỂ XÓA TOÀN BỘ GIỎ HÀNG ---
     const clearCart = () => {
-        setCartItems([]); // Đơn giản là đặt lại mảng về rỗng
+        setCartItems([]);
     };
 
     // --- CÁC HÀM QUẢN LÝ GIAO DIỆN ---
-
     const openCart = () => setIsCartOpen(true);
     const closeCart = () => setIsCartOpen(false);
 
-    // Tính toán tổng giá tiền và số lượng item mỗi khi giỏ hàng thay đổi
+    // Tính toán tổng giá tiền và số lượng item
     const cartItemCount = cartItems.length;
     const totalPrice = cartItems.reduce((total, item) => total + item.price, 0);
 
@@ -68,7 +88,7 @@ const CartProvider = ({ children }) => {
         cartItems,
         addToCart,
         removeFromCart,
-        clearCart, // <-- Cung cấp hàm này
+        clearCart,
         cartItemCount,
         totalPrice,
         isCartOpen,
@@ -83,5 +103,5 @@ const CartProvider = ({ children }) => {
     );
 };
 
-export { CartProvider, CartContext };
-export default CartContext;
+export default CartContext; 
+// Hook tùy chỉnh để sử dụng CartContext dễ dàng hơn
