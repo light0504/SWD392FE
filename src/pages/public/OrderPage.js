@@ -59,17 +59,14 @@ const OrderPage = () => {
             if (!user) { setLoading(false); return; }
             setLoading(true);
             try {
-                const [servicesRes, membershipRes] = await Promise.all([
-                    getAllServices(),
-                    getMembershipByCustomer(user.id)
-                ]);
-
+                const servicesRes = await getAllServices();
                 if (servicesRes.isSuccess) {
                     setAllServices(servicesRes.data);
                 } else {
                     throw new Error("Không thể tải danh sách dịch vụ.");
                 }
                 
+                const membershipRes = await getMembershipByCustomer(user.id);
                 if (membershipRes.isSuccess && membershipRes.data) {
                     setMembership(membershipRes.data);
                 }
