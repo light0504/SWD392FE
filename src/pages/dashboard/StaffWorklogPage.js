@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getStaffOrders, updateOrderDetailStatus } from '../../api/orderAPI';
 import { getAllCustomers } from '../../api/userAPI';
 import { ORDER_DETAIL_STATUS_MAP, getOrderDetailStatusInfo } from '../../constants/status';
+import { Helmet } from 'react-helmet-async';
 import './DashboardPages.css';
 import './StaffWorklogPage.css';
 
@@ -206,6 +207,9 @@ const StaffWorklogPage = () => {
 
         return (
             <div className="task-list">
+                <Helmet>
+                    <title>Đơn đặt lịch</title>
+                </Helmet>
                 {filteredTasks.map(task => {
                     const statusInfo = getOrderDetailStatusInfo(task.status);
                     return (

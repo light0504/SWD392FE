@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getOrderById } from '../../api/orderAPI';
+import { Helmet } from 'react-helmet-async';
 import './OrderSuccessPage.css';
 
 const formatDate = (dateString) => {
@@ -117,6 +118,9 @@ const OrderSuccessPage = () => {
 
     return (
         <div className="order-success-container">
+            <Helmet>
+                <title>Thanh toán thành công</title>
+            </Helmet>
             <div className="order-success-box">
                 <div className={`success-icon ${success ? 'success' : 'fail'}`}>
                     {success ? '✓' : '✗'}

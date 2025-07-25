@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { getAllStaffSchedule } from '../../api/scheduleAPI';
 import './DashboardPages.css';
 import './TimeTableSchedule.css'; // Tái sử dụng và mở rộng file CSS này
+import { Helmet } from 'react-helmet-async';
 
 // --- CÁC HÀM HELPER ---
 const generateTimeSlots = (startHour = 7, endHour = 21) => {
@@ -118,6 +119,9 @@ const ManagerSchedulePage = () => {
 
     return (
         <div className="dashboard-page">
+            <Helmet>
+                <title>Quản lí lịch làm việc</title>
+            </Helmet>
             <h1 className="page-title">Tổng Quan Lịch Làm Việc</h1>
             <p className="page-subtitle">Xem mật độ nhân viên theo từng khung giờ trong tuần.</p>
             <div className="content-box">

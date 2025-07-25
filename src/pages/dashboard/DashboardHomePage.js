@@ -1,11 +1,14 @@
-import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { Helmet } from 'react-helmet-async';
 import './DashboardPages.css'; // Tái sử dụng CSS chung
 
 const DashboardHomePage = () => {
     const { user } = useAuth();
     return (
         <div className="dashboard-page">
+            <Helmet>
+                <title>Dashboard</title>
+            </Helmet>
             <h1 className="page-title">Tổng quan</h1>
             <div className="welcome-card">
                 <h2>Xin chào, {user.firstName}!</h2>

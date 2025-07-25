@@ -1,6 +1,6 @@
-import React from 'react';
 import { useState, useEffect } from 'react';
 import { getAllServices, createService, deleteService, updateService } from '../../api/serviceapi';
+import { Helmet } from 'react-helmet-async';
 import './ServiceManagement.css';
 
 // Modal component for notifications and confirmations
@@ -191,6 +191,9 @@ const ServiceManagement = () => {
 
     return (
         <>
+        <Helmet>
+                <title>Quản lí dịch vụ</title>
+            </Helmet>
             <div className="dashboard-page service-management-page">
                 <h1 className="page-title">Quản Lý Dịch Vụ</h1>
                 <p className="page-subtitle">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { registerUser } from '../../api/authAPI';
+import { Helmet } from 'react-helmet-async';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
@@ -107,6 +108,9 @@ const RegisterPage = () => {
 
   return (
     <div className="form-page-container">
+      <Helmet>
+                <title>Đăng kí</title>
+            </Helmet>
       <form className="form-box" onSubmit={handleSubmit} noValidate>
         <h2>Tạo tài khoản PetParadise</h2>
 

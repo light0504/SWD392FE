@@ -1,10 +1,14 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import './DashboardPages.css'; // Tái sử dụng CSS chung
+import { Helmet } from 'react-helmet-async';
 
 const AccessDeniedPage = () => {
     return (
+        
         <div className="dashboard-page text-center">
+            <Helmet>
+                <title>Access Denied</title>
+            </Helmet>
             <div className="access-denied-icon">🚫</div>
             <h1 className="page-title" style={{color: '#e74c3c'}}>Truy Cập Bị Từ Chối</h1>
             <p className="page-subtitle">

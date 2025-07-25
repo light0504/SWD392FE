@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { getOrderHistory } from '../../api/orderAPI';
 import { getOrderStatusInfo, getOrderDetailStatusInfo, ORDER_STATUS_MAP } from '../../constants/status';
 import RatingModal from '../../components/RatingModal/RatingModal';
+import { Helmet } from 'react-helmet-async';
 import './OrderHistoryPage.css';
 
 const formatDate = (dateString) => new Date(dateString).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -82,6 +83,9 @@ const OrderHistoryPage = () => {
 
         return (
             <>
+            <Helmet>
+                <title>Lịch sử đặt lịch</title>
+            </Helmet>
                 <div className="filter-tabs">
                     <button onClick={() => setActiveFilter('all')} className={activeFilter === 'all' ? 'active' : ''}>Tất Cả</button>
                     {Object.values(ORDER_STATUS_MAP).map(statusInfo => (
