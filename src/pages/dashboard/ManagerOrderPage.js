@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { getAllOrder } from '../../api/orderAPI';
 import { getAllCustomers } from '../../api/userAPI';
 import { getAllStaff } from '../../api/staffapi';
 import { getOrderStatusInfo, getOrderDetailStatusInfo, ORDER_STATUS_MAP } from '../../constants/status'; // Import từ file mới
+import { Helmet } from 'react-helmet-async';
 import './DashboardPages.css';
 import './ManagerOrderPage.css';
 
@@ -68,6 +69,9 @@ const ManagerOrderPage = () => {
 
         return (
             <div className="order-table-container">
+                <Helmet>
+                    <title>Quản lí lịch</title>
+                </Helmet>
                 {filteredOrders.map(order => {
                     const statusInfo = getOrderStatusInfo(order.status);
                     const isExpanded = expandedOrderId === order.id;

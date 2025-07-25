@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'; // <-- 1. Import useEffect
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { Helmet } from 'react-helmet-async';
 import './LoginPage.css';
 
 const LoginPage = () => {
@@ -73,6 +74,9 @@ const LoginPage = () => {
 
   return (
     <div className="login-container">
+      <Helmet>
+                <title>Đăng nhập</title>
+            </Helmet>
       <div className="login-box">
         <h2>Chào mừng trở lại!</h2>
         <p>Đăng nhập để tiếp tục với PetParadise</p>

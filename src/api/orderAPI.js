@@ -22,7 +22,6 @@ const getOrderHistory = async (customerId) => {
 const getAllOrder = async () => {
   try {
     const response = await apiClient.get(`/Order`);
-    console.log("All orders fetched successfully:", response);
     return response.data;
   } catch (error) {
     // Sửa lại log lỗi cho chính xác

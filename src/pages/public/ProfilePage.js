@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getCustomerProfile, updateUserProfile } from '../../api/authAPI';
 import { getMembershipByCustomer } from '../../api/membershipAPI';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
 const genderMap = {
   1: 'Nam',
@@ -138,6 +139,9 @@ export default function ProfilePage() {
 
   return (
     <div className="profile-container">
+      <Helmet>
+                <title>Trang cá nhân</title>
+            </Helmet>
       <div className="profile-card">
         <h2>Hồ sơ của tôi</h2>
 

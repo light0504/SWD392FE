@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { getAllMemberships, getMembershipByCustomer, createMembershipOrder, deactivateMembership } from '../../api/membershipAPI';
 import { createPaymentURL } from '../../api/payAPI';
+import { Helmet } from 'react-helmet-async';
 import './MembershipPage.css';
 
 const MembershipPage = () => {
@@ -117,6 +118,9 @@ const MembershipPage = () => {
 
   return (
     <div className="membership-page">
+      <Helmet>
+                <title>Gói thành viên</title>
+            </Helmet>
       <h1 className="page-title">Các Gói Thành Viên</h1>
       <p className="page-subtitle">Chọn gói phù hợp để nhận ưu đãi và tiết kiệm hơn khi sử dụng dịch vụ!</p>
       <div className="membership-list">

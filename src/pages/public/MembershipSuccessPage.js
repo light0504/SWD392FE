@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getOrderById } from '../../api/orderAPI';
+import { Helmet } from 'react-helmet-async';
 import './MembershipSuccessPage.css';
 
 const formatCurrency = (amount) => {
@@ -77,6 +78,9 @@ const MembershipSuccessPage = () => {
 
     return (
         <div className="order-success-container">
+            <Helmet>
+                <title>Mua gói thành viên</title>
+            </Helmet>
             <div className="order-success-box">
                 <div className={`success-icon ${success ? 'success' : 'fail'}`}> 
                     {success ? '✓' : '✗'}

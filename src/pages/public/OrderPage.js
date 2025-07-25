@@ -6,7 +6,7 @@ import { getAllServices } from '../../api/serviceapi';
 import { createOrder } from '../../api/orderAPI';
 import { createPaymentUrl } from '../../api/paymentapi';
 import { getMembershipByCustomer } from '../../api/membershipAPI';
-import ConfirmationModal from '../../components/ConfirmationModal/ConfirmationModal';
+import { Helmet } from 'react-helmet-async';
 import './OrderPage.css';
 
 // --- Các hàm Helper ---
@@ -50,7 +50,6 @@ const OrderPage = () => {
     const [error, setError] = useState(null);
     const [lastUsedTime, setLastUsedTime] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     
     const minDateTime = toInputDateTimeString(new Date());
 
@@ -70,9 +69,9 @@ const OrderPage = () => {
                 } else {
                     throw new Error("Không thể tải danh sách dịch vụ.");
                 }
-
-                if (membershipRes.isSuccess && membershipRes.data && membershipRes.data.length > 0) {
-                    setMembership(membershipRes.data[0]);
+                
+                if (membershipRes.isSuccess && membershipRes.data) {
+                    setMembership(membershipRes.data);
                 }
                 
             } catch (err) {
@@ -83,6 +82,13 @@ const OrderPage = () => {
         };
         fetchInitialData();
     }, [user]);
+
+    // ** Cách kiểm tra giá trị state sau khi cập nhật **
+    useEffect(() => {
+        if (membership) {
+            console.log("State `membership` đã được cập nhật thành công:", membership);
+        }
+    }, [membership]);
 
     useEffect(() => {
         const cartItems = location.state?.cartItemsFromSidebar;
@@ -99,9 +105,7 @@ const OrderPage = () => {
     }, [user, loading, navigate, location]);
 
     const filteredServices = useMemo(() => {
-        if (!searchTerm) {
-            return allServices;
-        }
+        if (!searchTerm) return allServices;
         return allServices.filter(service =>
             service.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
@@ -161,16 +165,11 @@ const OrderPage = () => {
         );
     };
 
-    const handleOpenConfirmation = () => {
+    const handleSubmitOrder = async () => {
         if (selectedServices.length === 0) { alert("Vui lòng chọn ít nhất một dịch vụ."); return; }
         if (selectedServices.some(s => !s.scheduledTime)) { alert("Vui lòng chọn ngày giờ cho tất cả các dịch vụ đã chọn."); return; }
-        setIsConfirmModalOpen(true);
-    };
-
-    const handleConfirmOrder = async () => {
         setSubmitting(true);
         setError(null);
-        
         const orderPayload = {
             customerId: user.id,
             orderDate: getLocalISOString(new Date()),
@@ -182,11 +181,9 @@ const OrderPage = () => {
         try {
             const orderResponse = await createOrder(orderPayload);
             if (!orderResponse.isSuccess) throw new Error(orderResponse.message || "Tạo đơn hàng thất bại.");
-            
             const newOrderId = orderResponse.data.id;
             const paymentPayload = { orderId: newOrderId };
             const paymentResponse = await createPaymentUrl(paymentPayload);
-
             if (paymentResponse) {
                 clearCart();
                 window.location.href = paymentResponse;
@@ -196,7 +193,6 @@ const OrderPage = () => {
         } catch (err) {
             setError(err.message || "Đã có lỗi xảy ra trong quá trình đặt hàng.");
             setSubmitting(false);
-            setIsConfirmModalOpen(false);
         }
     };
 
@@ -204,6 +200,9 @@ const OrderPage = () => {
 
     return (
         <div className="order-page">
+            <Helmet>
+                            <title>Dặt lịch</title>
+                        </Helmet>
             <div className="container">
                 <h1 className="page-title">Đặt Lịch & Thanh Toán</h1>
                 <p className="page-subtitle">Chọn dịch vụ, đặt lịch hẹn và hoàn tất thanh toán trong một bước.</p>
@@ -301,7 +300,7 @@ const OrderPage = () => {
                                 {error && <p className="error-message">{error}</p>}
                                 <button
                                     className="btn-submit-order"
-                                    onClick={handleOpenConfirmation}
+                                    onClick={handleSubmitOrder}
                                     disabled={submitting}
                                 >
                                     {submitting ? 'Đang xử lý...' : 'Tiến hành Thanh toán'}
@@ -311,15 +310,6 @@ const OrderPage = () => {
                     </div>
                 </div>
             </div>
-
-            {isConfirmModalOpen && (
-                <ConfirmationModal
-                    orderDetails={{ selectedServices, totalPrice, discount, finalPrice, membership, note: orderNote }}
-                    onConfirm={handleConfirmOrder}
-                    onCancel={() => setIsConfirmModalOpen(false)}
-                    isSubmitting={submitting}
-                />
-            )}
         </div>
     );
 };

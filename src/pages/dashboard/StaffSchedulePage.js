@@ -3,6 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getStaffSchedule } from '../../api/scheduleAPI';
 import { getStaffOrders } from '../../api/orderAPI';
 import './DashboardPages.css';
+import { Helmet } from 'react-helmet-async';
 import './TimeTableSchedule.css';
 
 // --- CÁC HÀM HELPER ---
@@ -131,6 +132,9 @@ const StaffSchedulePage = () => {
 
         return (
             <div className="timetable-container">
+                <Helmet>
+                <title>Lịch làm việc</title>
+            </Helmet>
                 {renderTimeIndicator()}
                 <table className="timetable">
                     <thead>
